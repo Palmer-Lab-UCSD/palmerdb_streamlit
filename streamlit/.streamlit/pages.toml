@@ -1,0 +1,30 @@
+[[pages]]
+path = "home.py"
+name = "Home"
+icon = ""
+is_section = false
+
+[[pages]]
+name = "Palmer Lab Access"
+is_section = true
+icon = ""
+
+[[pages]]
+path = "pages/Summary.py"
+name = "Database Summary"
+icon = ""
+
+[[pages]]
+path = "pages/Sample Tracking.py"
+name = "Sample Tracking"
+icon = ""
+
+[[pages]]
+name = "Public"
+is_section = true
+icon = ""
+
+[[pages]]
+path = "pages/genotype.py"
+name = "Genotyping Reports"
+icon = ""
