@@ -161,6 +161,11 @@ cython_debug/
 #.idea/
 
 # secrets
-/.streamlit/secrets.toml
+streamlit/.streamlit/secrets.toml
 
-
+# else
+streamlit/pyvenv.cfg
+streamlit/summary_query.txt
+streamlit/components/cognito.env
+streamlit/*/.DS_Store
+.DS_Store

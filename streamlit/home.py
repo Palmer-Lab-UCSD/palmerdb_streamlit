@@ -1,0 +1,62 @@
+"""
+# Palmer Lab Database Dashboard Home
+"""
+
+import streamlit as st
+import numpy as np
+import pandas as pd
+import components.authenticate as authenticate
+from st_pages import show_pages_from_config, add_indentation, hide_pages
+st.set_page_config(
+    page_title="Palmer Lab Database",
+    page_icon="🐀",
+    layout="wide",
+    initial_sidebar_state="auto"
+)
+
+# Check authentication
+authenticate.set_st_state_vars()
+# Add login/logout buttons
+if st.session_state["authenticated"]:
+    authenticate.button_logout()
+else:
+    authenticate.button_login()
+
+# sidebar pages
+add_indentation()
+show_pages_from_config()
+
+# hide pages from non-palmer lab
+if "palmerlab" not in st.session_state["user_cognito_groups"]:
+    hide_pages(["Database Summary", "Sample Tracking"])
+
+# title
+st.image('https://ratgenes.org/wp-content/uploads/2014/11/GWAS_1200x150pxBanner-01.png')
+st.write("# Palmer Lab Database 🐀")
+
+# body
+st.markdown(
+    """
+    This application serves as a dashboard for the Palmer Lab database.
+    
+    Pages:
+    
+    Public
+    - Genotyping Report
+    
+    Palmer Lab Access:
+    - Sample Tracking 
+    - Summary
+
+    Future:
+    - project stuff
+        - data dictionaries
+    - visuals
+    
+    Links:
+    - [ratgenes.org](https://ratgenes.org)
+    - [Palmer Lab website](https://palmerlab.org)
+
+    This app was created with [streamlit](https://streamlit.io).
+"""
+)
