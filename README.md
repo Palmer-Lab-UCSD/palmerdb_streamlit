@@ -1,8 +1,6 @@
 # palmerdb_streamlit
 This repo is for the code used to create and maintain the streamlit application for viewing database summaries.
 
-Setup:
-
 ##### home.py 
 This is the main page and the python file used to start the application.
 ##### .streamlit
@@ -11,10 +9,14 @@ This directory contains ```config.toml```, ```pages.toml```, and a secrets file 
 ```pages.toml``` sets the layout of the sidebar to display pages.
 
 ##### pages
-This directory contains pages which appear in the app apart from the main page. Each python file is an individual page. Current pages are split into Palmer Lab access and public access sections.
+This directory contains pages which appear in the app apart from the main page. Each python file is an individual page. Current pages are split into Palmer Lab access and public access sections. The pages are built with [streamlit-pages](https://github.com/blackary/st_pages).
 
+##### components
+This directory contains primarily the components necessary to enable the authentication feature which utilizes AWS Cognito. The code can be found [here](https://levelup.gitconnected.com/building-a-multi-page-app-with-streamlit-and-restricting-user-access-to-pages-using-aws-cognito-89a1fb5364a3). 
 
-To run:
+### To launch:
 ```
 streamlit run home.py
 ```
+
+This app was created with [streamlit](https://streamlit.io/). 
