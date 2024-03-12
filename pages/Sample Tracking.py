@@ -25,10 +25,10 @@ else:
     authenticate.button_login()
 
 # show pages and hide non-palmer
-add_indentation()
-show_pages_from_config()
 if "palmerlab" not in st.session_state["user_cognito_groups"]:
     hide_pages(["Database Summary", "Sample Tracking"])
+add_indentation()
+show_pages_from_config()
 
 if st.session_state["authenticated"] and "palmerlab" in st.session_state["user_cognito_groups"]:
 
