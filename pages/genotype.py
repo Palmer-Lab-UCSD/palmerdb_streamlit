@@ -20,11 +20,11 @@ if st.session_state["authenticated"]:
 else:
     authenticate.button_login()
 
-# show pages, hide palmer pages
-add_indentation()
-show_pages_from_config()
+# show pages and hide non-palmer
 if "palmerlab" not in st.session_state["user_cognito_groups"]:
     hide_pages(["Database Summary", "Sample Tracking"])
+add_indentation()
+show_pages_from_config()
 
 # content
 st.title('Genotype Reports')

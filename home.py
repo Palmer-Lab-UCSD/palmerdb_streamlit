@@ -22,13 +22,13 @@ if st.session_state["authenticated"]:
 else:
     authenticate.button_login()
 
-# sidebar pages
-add_indentation()
-show_pages_from_config()
-
 # hide pages from non-palmer lab
 if "palmerlab" not in st.session_state["user_cognito_groups"]:
     hide_pages(["Database Summary", "Sample Tracking"])
+    
+# sidebar pages
+add_indentation()
+show_pages_from_config()
 
 # title
 st.image('https://ratgenes.org/wp-content/uploads/2014/11/GWAS_1200x150pxBanner-01.png')
