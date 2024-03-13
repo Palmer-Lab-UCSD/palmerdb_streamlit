@@ -8,6 +8,9 @@ import pandas as pd
 import time
 import hmac
 import components.authenticate as authenticate
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
 from st_pages import show_pages_from_config, add_indentation, hide_pages
 st.set_page_config(
     page_title="Palmer Lab Database Samples",
@@ -16,21 +19,35 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# Check authentication
-authenticate.set_st_state_vars()
-# Add login/logout buttons
-if st.session_state["authenticated"]:
-    authenticate.button_logout()
-else:
-    authenticate.button_login()
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
-# show pages and hide non-palmer
-if "palmerlab" not in st.session_state["user_cognito_groups"]:
-    hide_pages(["Database Summary", "Sample Tracking"])
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
+
+name, authentication_status, username = authenticator.login('main')
+
+# sidebar pages
 add_indentation()
-show_pages_from_config()
+if authentication_status == None:
+    hide_pages(["Database Summary", "Sample Tracking"])
+    st.write('Please login.')
+elif authentication_status:
+    authenticator.logout('Logout', 'sidebar')
+    if st.session_state["name"] == 'admin':
+        show_pages_from_config()
+    else:
+        hide_pages(["Database Summary", "Sample Tracking"])
+        st.write("You do not have permission. Please contact the admin if you think this is a mistake.")
+elif authentication_status == False:
+    st.error('Username/password is incorrect')
 
-if st.session_state["authenticated"] and "palmerlab" in st.session_state["user_cognito_groups"]:
+if authentication_status and "admin" in st.session_state["name"]:
 
     st.title('Palmer Lab Database Samples')
     
@@ -84,7 +101,7 @@ if st.session_state["authenticated"] and "palmerlab" in st.session_state["user_c
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
         return query
-    
+
     # tabs
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 'Tissue Received',
                                                   'Genotyping Logs', 'RNA Received', 'RNA Extraction Log'])
@@ -227,10 +244,3 @@ if st.session_state["authenticated"] and "palmerlab" in st.session_state["user_c
     # force refresh
     if st.button('Refresh', on_click = st.cache_data.clear()):
         st.cache_data.clear()
-
-# catch authentication 
-else:
-    if st.session_state["authenticated"]:
-        st.write("You do not have access. Please contact the administrator.")
-    else:
-        st.write("Please login!")
