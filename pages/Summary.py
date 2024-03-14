@@ -45,7 +45,7 @@ elif authentication_status:
 elif authentication_status == False:
     st.error('Username/password is incorrect')
 
-if authentication_status and "admin" in st.session_state["name"]:
+if authentication_status and "palmer" in st.session_state["name"]:
     # db connection
     # creds in secret
     conn = st.connection("palmerdb", type="sql", autocommit=False)
