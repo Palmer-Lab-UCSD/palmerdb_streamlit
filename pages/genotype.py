@@ -3,7 +3,6 @@
 """
 import streamlit as st
 import hmac
-import components.authenticate as authenticate
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
@@ -30,16 +29,16 @@ name, authentication_status, username = authenticator.login('sidebar')
 
 # sidebar pages
 add_indentation()
-if authentication_status:
-    authenticator.logout('Logout', 'sidebar')
-    if st.session_state["name"] == 'admin':
-        show_pages_from_config()
-    else:
-        hide_pages(["Database Summary", "Sample Tracking"])
-elif authentication_status == None:
+show_pages_from_config()
+if authentication_status == None:
     hide_pages(["Database Summary", "Sample Tracking"])
+elif authentication_status:
+    authenticator.logout('Logout', 'sidebar')
+    if st.session_state["name"] != 'palmer':
+        hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status == False:
     st.error('Username/password is incorrect')
+    hide_pages(["Database Summary", "Sample Tracking"])
 
 # content
 st.title('Genotype Reports')

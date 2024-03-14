@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import time
 import hmac
-import components.authenticate as authenticate
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
