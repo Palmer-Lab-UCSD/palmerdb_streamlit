@@ -37,7 +37,7 @@ if authentication_status == None:
     st.write('Please login.')
 elif authentication_status:
     authenticator.logout('Logout', 'sidebar')
-    if st.session_state["name"] == 'admin':
+    if st.session_state["name"] == 'palmer':
         show_pages_from_config()
     else:
         hide_pages(["Database Summary", "Sample Tracking"])
