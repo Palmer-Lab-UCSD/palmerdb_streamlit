@@ -32,14 +32,12 @@ name, authentication_status, username = authenticator.login('sidebar')
 
 # sidebar pages
 add_indentation()
-if authentication_status:
+show_pages_from_config()
+if authentication_status == None:
+    hide_pages(["Database Summary", "Sample Tracking"])
+elif authentication_status:
     authenticator.logout('Logout', 'sidebar')
     if st.session_state["name"] == 'admin':
-        show_pages_from_config()
-    else:
-        hide_pages(["Database Summary", "Sample Tracking"])
-elif authentication_status == None:
-    hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status == False:
     st.error('Username/password is incorrect')
 
