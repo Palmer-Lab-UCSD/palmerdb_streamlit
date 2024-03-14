@@ -12,7 +12,7 @@ This directory contains ```config.toml```, ```pages.toml```, and a secrets file 
 This directory contains pages which appear in the app apart from the main page. Each python file is an individual page. Current pages are split into Palmer Lab access and public access sections. The pages are built with [streamlit-pages](https://github.com/blackary/st_pages).
 
 ##### components
-This directory contains primarily the components necessary to enable the authentication feature which utilizes AWS Cognito. The code can be found [here](https://levelup.gitconnected.com/building-a-multi-page-app-with-streamlit-and-restricting-user-access-to-pages-using-aws-cognito-89a1fb5364a3). 
+Switched authorization method -- currently unused.
 
 ### To launch:
 ```
