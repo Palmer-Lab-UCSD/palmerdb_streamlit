@@ -5,7 +5,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import components.authenticate as authenticate
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
@@ -37,9 +36,11 @@ if authentication_status == None:
     hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status:
     authenticator.logout('Logout', 'sidebar')
-    if st.session_state["name"] == 'admin':
+    if st.session_state["name"] != 'palmer':
+        hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status == False:
     st.error('Username/password is incorrect')
+    hide_pages(["Database Summary", "Sample Tracking"])
 
 
 # title
