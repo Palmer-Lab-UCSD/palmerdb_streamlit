@@ -8,6 +8,8 @@ import pandas as pd
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
+from components.logger import *
+import os
 from st_pages import show_pages_from_config, add_indentation, hide_pages
 st.set_page_config(
     page_title="Palmer Lab Database",
@@ -15,7 +17,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+logger = setup_logger()
+filename = os.path.basename(__file__)
 
+log_action(logger, f'{filename}: app started')
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -35,10 +40,12 @@ show_pages_from_config()
 if authentication_status == None:
     hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status:
+    log_action(logger, f'{filename}: authentication status: true, user name: {st.session_state["name"]}')
     authenticator.logout('Logout', 'sidebar')
     if st.session_state["name"] != 'palmer':
         hide_pages(["Database Summary", "Sample Tracking"])
 elif authentication_status == False:
+    log_action(logger, f'{filename}: authentication status: false')
     st.error('Username/password is incorrect')
     hide_pages(["Database Summary", "Sample Tracking"])
 
@@ -122,4 +129,3 @@ st.markdown(
 #     This app was created with [streamlit](https://streamlit.io).
 # """
 # )
-
