@@ -8,6 +8,8 @@ import pandas as pd
 import time
 import hmac
 import streamlit_authenticator as stauth
+from components.logger import *
+import os
 import yaml
 from yaml.loader import SafeLoader
 from st_pages import show_pages_from_config, add_indentation, hide_pages
@@ -17,6 +19,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+logger = setup_logger()
+filename = os.path.basename(__file__)
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -37,6 +41,7 @@ if authentication_status == None:
     hide_pages(["Database Summary", "Sample Tracking"])
     st.write('Please login.')
 elif authentication_status:
+    log_action(logger, f'{filename}: authentication status: true, user name: {st.session_state["name"]}')
     authenticator.logout('Logout', 'sidebar')
     if st.session_state["name"] == 'palmer':
         show_pages_from_config()
@@ -44,6 +49,7 @@ elif authentication_status:
         hide_pages(["Database Summary", "Sample Tracking"])
         st.write("You do not have permission. Please contact the admin if you think this is a mistake.")
 elif authentication_status == False:
+    log_action(logger, f'{filename}: authentication status: false')
     st.error('Username/password is incorrect')
 
 if authentication_status and "palmer" in st.session_state["name"]:
@@ -59,13 +65,15 @@ if authentication_status and "palmer" in st.session_state["name"]:
     # db connection
     # creds in secret
     conn = st.connection("palmerdb", type="sql", autocommit=False)
-    
+    log_action(logger, f'{filename}: db connection made')
     # project list
     project = conn.query("select project_name from sample_tracking.project_metadata order by project_name")
     project = project.project_name.tolist()
+    log_action(logger, f'{filename}: project list acquired')
     # pool list
     pool = conn.query("select distinct pool from sample_tracking.sample_barcode_lib where pool != 'None' order by pool")
     pool = pool.pool.tolist()
+    log_action(logger, f'{filename}: pool list acquired')
 
     # project selector, rfid filter
     projects = st.multiselect(label='select project', 
@@ -85,15 +93,20 @@ if authentication_status and "palmer" in st.session_state["name"]:
         conditions = []
     
         if options:
+            log_action(logger, f'{filename}: projects selected: {options}')
             conditions.append(f"project_name IN ({options})")
     
         if value and value2:
+            log_action(logger, f'{filename}: rfids selected: {value}, runid selected {value2}')
             conditions.append(f"rfid IN ({value}) AND runid = {value2}")
         elif value:
+            log_action(logger,  f'{filename}: rfids selected: {value}')
             conditions.append(f"rfid IN ({value})")
         elif value2:
+            log_action(logger,  f'{filename}: runid selected: {value2}')
             conditions.append(f"runid = {value2}")
         if value3:
+            log_action(logger,  f'{filename}: pool selected: {value3}')
             conditions.append(f"pool IN ({value3})")
             
         query = f"SELECT * FROM sample_tracking.{table}"
@@ -102,11 +115,12 @@ if authentication_status and "palmer" in st.session_state["name"]:
         return query
 
     # tabs
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 'Tissue Received',
-                                                  'Genotyping Logs', 'RNA Received', 'RNA Extraction Log'])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 
+                                                        'Tissue Received', 'Genotyping Logs', 'RNA Received', 'RNA Extraction Log'])
 
     # sample metadata
     with tab1:
+        log_action(logger, f'{filename}: tab selected: sample metadata')
         st.header("Sample Metadata")
         query = build_query('sample_metadata', projects, rfids)
         st.write(query) # remove later
@@ -125,6 +139,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
     
     # DNA extraction log
     with tab2:
+        log_action(logger, f'{filename}: tab selected: DNA extraction')
         st.header("DNA Extraction Log")
         query = build_query('extraction_log', projects, rfids)
         st.write(query) # remove later
@@ -142,6 +157,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
     
     # sample barcode library
     with tab3:
+        log_action(logger, f'{filename}: tab selected: sample barcode lib')
         st.header("Barcode Library")
     
         runids = st.text_input('find runid', key=3)
@@ -166,6 +182,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
 
     # tissue
     with tab4:
+        log_action(logger, f'{filename}: tab selected: tissue')
         st.header("Tissue Received")
     
         query = build_query('tissue', projects, rfids, runid, pool)
@@ -183,6 +200,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
 
     # genotyping log (combine 10.1, 10.2)
     with tab5:
+        log_action(logger, f'{filename}: tab selected: genotyping log')
         st.header("Genotyping Logs")
     
         rounds = st.multiselect(label='select round', 
@@ -207,6 +225,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
 
     # RNA received
     with tab6:
+        log_action(logger, f'{filename}: tab selected: RNA received')
         st.header("RNA Received")
     
         query = build_query('rna', projects, rfids)
@@ -224,6 +243,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
 
     # RNA Extraction Log
     with tab7:
+        log_action(logger, f'{filename}: tab selected: RNA extraction')
         st.header("RNA Extraction Log")
     
         query = build_query('rna_extraction_log', projects, rfids)
@@ -242,4 +262,5 @@ if authentication_status and "palmer" in st.session_state["name"]:
         
     # force refresh
     if st.button('Refresh', on_click = st.cache_data.clear()):
+        log_action(logger, f'{filename}: refresh button clicked')
         st.cache_data.clear()
