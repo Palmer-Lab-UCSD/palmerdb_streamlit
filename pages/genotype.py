@@ -6,6 +6,8 @@ import hmac
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
+from components.logger import *
+import os
 from st_pages import show_pages_from_config, add_indentation, hide_pages
 st.set_page_config(
     page_title="Palmer Lab Database Samples",
@@ -13,7 +15,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
-
+logger = setup_logger()
+filename = os.path.basename(__file__)
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 

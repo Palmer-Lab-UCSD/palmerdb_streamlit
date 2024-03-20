@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import time
 import streamlit_authenticator as stauth
+from components.logger import *
+import os
 import yaml
 from yaml.loader import SafeLoader
 from st_pages import show_pages_from_config, add_indentation, hide_pages
@@ -16,6 +18,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+logger = setup_logger()
+filename = os.path.basename(__file__)
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -36,6 +40,7 @@ if authentication_status == None:
     hide_pages(["Database Summary", "Sample Tracking"])
     st.write('Please login.')
 elif authentication_status:
+    log_action(logger, f'{filename}: authentication status: true, user name: {st.session_state["name"]}')
     authenticator.logout('Logout', 'sidebar')
     if st.session_state["name"] == 'palmer':
         show_pages_from_config()
@@ -43,16 +48,19 @@ elif authentication_status:
         hide_pages(["Database Summary", "Sample Tracking"])
         st.write("You do not have permission. Please contact the admin if you think this is a mistake.")
 elif authentication_status == False:
+    log_action(logger, f'{filename}: authentication status: false')
     st.error('Username/password is incorrect')
 
 if authentication_status and "palmer" in st.session_state["name"]:
     # db connection
     # creds in secret
     conn = st.connection("palmerdb", type="sql", autocommit=False)
+    log_action(logger, f'{filename}: db connection made')
     
     # project list
     project = conn.query("select distinct project_name from sample_tracking.project_metadata order by project_name")
     project = project.project_name.tolist()
+    log_action(logger, f'{filename}: project list acquired')
     
     st.title('Palmer Lab Database Summary')
     
@@ -132,9 +140,11 @@ if authentication_status and "palmer" in st.session_state["name"]:
     '''
     # make connection
     df = conn.query(sql)
+    log_action(logger, f'{filename}: form dataframe')
 
     # filter selected projects
     if len(options) > 0:
+        log_action(logger, f'{filename}: filter dataframe')
         df = df.loc[df.project_name.isin(options)]
         
     # display df, shape
@@ -153,4 +163,5 @@ if authentication_status and "palmer" in st.session_state["name"]:
 
     # force refresh
     if st.button('Refresh', on_click = st.cache_data.clear()):
+        log_action(logger, f'{filename}: refresh button clicked')
         st.cache_data.clear()
