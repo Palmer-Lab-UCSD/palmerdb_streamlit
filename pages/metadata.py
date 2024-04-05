@@ -75,7 +75,7 @@ if is_logged_in and username == 'admin':
     pools = st.selectbox(label='select pool', 
                            options=pool, index = None,
                            placeholder="Choose a pool", disabled=False, label_visibility="visible", key=4)
-    
+    log_action(logger, f'pools selected: {pools}')
     
     # query text
     projects_query = f""" SELECT DISTINCT project_name
@@ -107,16 +107,18 @@ if is_logged_in and username == 'admin':
             WHERE
                 a.pool = '{pools}'
         """
-    
+    log_action(logger, f'query made with: {pools}')
     org = st.multiselect(label='select organisms', 
                          options=['rat', 'mouse', 'zebrafish'], default = ['rat'],
                          placeholder="Choose organisms to include", disabled=False, label_visibility="visible", key=5)
-        # make connection
+    
+    # query
     if pools is not None:
         df = conn.query(sql)
     
-    # filter selected projects
+    # filter selected animals
         if org is not None:
+            log_action(logger, f'animals chosen: {org}')
             df = df.loc[df.organism.isin(org)]
         st.dataframe(df)
     
@@ -135,3 +137,12 @@ if is_logged_in and username == 'admin':
     if st.button('Refresh', on_click = st.cache_data.clear()):
         log_action(logger, f'{filename}: refresh button clicked')
         st.cache_data.clear()
+
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
+    
+    [Palmer Lab website](https://palmerlab.org)
+    
+    [ratgtex.org](https://ratgtex.org)
+    ''')
