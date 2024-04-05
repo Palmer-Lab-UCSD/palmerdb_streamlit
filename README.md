@@ -29,5 +29,3 @@ streamlit run home.py
 Authentication is done through [AWS Cognito](https://aws.amazon.com/cognito/). The application is deployed with [AWS Elastic Container Service](https://aws.amazon.com/ecs/).
 
 This application was developed as a project for the [Palmer Lab](https://palmerlab.org) with [Streamlit](https://streamlit.io).
-
-This app was created with [streamlit](https://streamlit.io/). 
