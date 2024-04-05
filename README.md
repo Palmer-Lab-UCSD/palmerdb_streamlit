@@ -1,5 +1,5 @@
 # palmerdb_streamlit
-This repo is for the code used to create and maintain the streamlit application for viewing database summaries.
+This repo is for the code used to create and maintain the Internet Rat Server (IRS) Streamlit application for viewing database summaries.
 
 ##### home.py 
 This is the main page and the python file used to start the application.
