@@ -7,14 +7,13 @@ import numpy as np
 import pandas as pd
 import time
 import hmac
-import streamlit_authenticator as stauth
 from components.logger import *
 import os
-import yaml
-from yaml.loader import SafeLoader
+from streamlit_cognito_auth import CognitoAuthenticator
+from dotenv import load_dotenv
 from st_pages import show_pages_from_config, add_indentation, hide_pages
 st.set_page_config(
-    page_title="Palmer Lab Database Samples",
+    page_title="Palmer Lab Database",
     page_icon="🐀",
     layout="wide",
     initial_sidebar_state="auto"
@@ -22,37 +21,44 @@ st.set_page_config(
 logger = setup_logger()
 filename = os.path.basename(__file__)
 
-with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
+log_action(logger, f'page: {filename}')
 
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
-    config['preauthorized']
+dotenv_path = os.path.join(os.getcwd(), '.streamlit', 'auth.env')
+load_dotenv(dotenv_path)
+pool_id = os.environ.get("POOL_ID")
+app_client_id = os.environ.get("APP_CLIENT_ID")
+app_client_secret = os.environ.get("APP_CLIENT_SECRET")
+
+authenticator = CognitoAuthenticator(
+    pool_id=pool_id,
+    app_client_id=app_client_id,
+    app_client_secret=app_client_secret,
+    use_cookies=False
 )
 
-name, authentication_status, username = authenticator.login('main')
+with st.sidebar:
+    is_logged_in = authenticator.login()
 
+    
+username = authenticator.get_username()
 # sidebar pages
 add_indentation()
-if authentication_status == None:
-    hide_pages(["Database Summary", "Sample Tracking"])
-    st.write('Please login.')
-elif authentication_status:
-    log_action(logger, f'{filename}: authentication status: true, user name: {st.session_state["name"]}')
-    authenticator.logout('Logout', 'sidebar')
-    if st.session_state["name"] == 'palmer':
-        show_pages_from_config()
-    else:
-        hide_pages(["Database Summary", "Sample Tracking"])
-        st.write("You do not have permission. Please contact the admin if you think this is a mistake.")
-elif authentication_status == False:
-    log_action(logger, f'{filename}: authentication status: false')
-    st.error('Username/password is incorrect')
+show_pages_from_config()
+if not is_logged_in:
+    st.write('Please log in.')
+    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
+elif is_logged_in:
+    log_action(logger, f'{filename}: authentication status: true, user name: {username}')
+    def logout():
+        authenticator.logout()
+    with st.sidebar:
+        st.write(f"Welcome, {authenticator.get_username()}!")
+        st.button("Logout", "logout_btn", on_click=logout)
+    if username != 'admin':
+        st.write('You do not have permission to access this page :( If you think this is a mistake, please contact us.')
+        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
 
-if authentication_status and "palmer" in st.session_state["name"]:
+if is_logged_in and username == 'admin':
 
     st.title('Palmer Lab Database Samples')
     
@@ -81,9 +87,7 @@ if authentication_status and "palmer" in st.session_state["name"]:
                        placeholder="Choose projects", disabled=False, label_visibility="visible", key=1)
     projects = ','.join([f"'{project}'" for project in projects])
     rfids = st.text_input('find rfids', key=2)
-    st.write(rfids) # remove later
     rfids =  ', '.join([f"'{v.strip()}'" for v in rfids.split(',') if v.strip()])
-    st.write(rfids) # remove later
 
     def build_query(table, options=None, value=None, value2=None, value3=None):
         ''' 
@@ -123,8 +127,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         log_action(logger, f'{filename}: tab selected: sample metadata')
         st.header("Sample Metadata")
         query = build_query('sample_metadata', projects, rfids)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
         
@@ -142,8 +147,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         log_action(logger, f'{filename}: tab selected: DNA extraction')
         st.header("DNA Extraction Log")
         query = build_query('extraction_log', projects, rfids)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
     
@@ -168,8 +174,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         pool = ','.join([f"'{v}'" for v in pools])
     
         query = build_query('sample_barcode_lib', projects, rfids, runid, pool)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
         csv = convert_df(df)
@@ -186,8 +193,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         st.header("Tissue Received")
     
         query = build_query('tissue', projects, rfids, runid, pool)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
         csv = convert_df(df)
@@ -211,8 +219,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         query = build_query('genotyping_log_total', projects, rfids)
         if round:
             query += f' where pipeline_round in ({round})'
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
         csv = convert_df(df)
@@ -229,8 +238,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         st.header("RNA Received")
     
         query = build_query('rna', projects, rfids)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
         csv = convert_df(df)
@@ -247,8 +257,9 @@ if authentication_status and "palmer" in st.session_state["name"]:
         st.header("RNA Extraction Log")
     
         query = build_query('rna_extraction_log', projects, rfids)
-        st.write(query) # remove later
-        df = conn.query(query)
+        st.code(query) # remove later
+        fullquery = 'rollback; begin transaction; ' + query
+        df = conn.query(fullquery)
         st.dataframe(df)
         st.write(len(df), ' entries')
     
@@ -264,3 +275,12 @@ if authentication_status and "palmer" in st.session_state["name"]:
     if st.button('Refresh', on_click = st.cache_data.clear()):
         log_action(logger, f'{filename}: refresh button clicked')
         st.cache_data.clear()
+
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
+    
+    [Palmer Lab website](https://palmerlab.org)
+    
+    [ratgtex.org](https://ratgtex.org)
+    ''')

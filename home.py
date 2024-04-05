@@ -5,9 +5,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import streamlit_authenticator as stauth
-import yaml
-from yaml.loader import SafeLoader
 from components.logger import *
 import os
 from streamlit_cognito_auth import CognitoAuthenticator
@@ -23,18 +20,7 @@ logger = setup_logger()
 filename = os.path.basename(__file__)
 
 log_action(logger, f'{filename}: app started')
-# with open('config.yaml') as file:
-#     config = yaml.load(file, Loader=SafeLoader)
 
-# authenticator = stauth.Authenticate(
-#     config['credentials'],
-#     config['cookie']['name'],
-#     config['cookie']['key'],
-#     config['cookie']['expiry_days'],
-#     config['preauthorized']
-# )
-
-# name, authentication_status, username = authenticator.login('sidebar')
 dotenv_path = os.path.join(os.getcwd(), '.streamlit', 'auth.env')
 load_dotenv(dotenv_path)
 pool_id = os.environ.get("POOL_ID")
@@ -57,20 +43,16 @@ username = authenticator.get_username()
 add_indentation()
 show_pages_from_config()
 if not is_logged_in:
-    hide_pages(["Database Summary", "Sample Tracking"])
+    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
 elif is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
     def logout():
         authenticator.logout()
     with st.sidebar:
-        st.write(f"Welcome, {authenticator.get_username()}")
+        st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
     if username != 'admin':
-        hide_pages(["Database Summary", "Sample Tracking"])
-# elif not is_logged_in:
-#     log_action(logger, f'{filename}: authentication status: false')
-#     st.error('Username/password is incorrect')
-#     hide_pages(["Database Summary", "Sample Tracking"])
+        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
 
 
 # title
@@ -80,75 +62,19 @@ st.write("# Palmer Lab Database 🐀")
 # body
 st.markdown(
     """
-    This application serves as a dashboard for the Palmer Lab database.
-    
-    Pages:
-    
-    Public
-    - Genotyping Report
-    
-    Palmer Lab Access:
-    - Sample Tracking 
-    - Summary
+    The Internet Rat Server (IRS) serves as a dashboard for the Palmer Lab database.
 
-    Future:
-    - project stuff
-        - data dictionaries
-    - visuals
+    To access tools, please sign in with the given account using the form in the left sidebar.
     
-    Links:
-    - [ratgenes.org](https://ratgenes.org)
-    - [Palmer Lab website](https://palmerlab.org)
-
-    This app was created with [streamlit](https://streamlit.io).
+    This app was developed as a project for the [Palmer Lab](https://palmerlab.org), and was created with [streamlit](https://streamlit.io).
 """
 )
 
-
-
-# # Check authentication
-# authenticate.set_st_state_vars()
-# # Add login/logout buttons
-# if st.session_state["authenticated"]:
-#     authenticate.button_logout()
-# else:
-#     authenticate.button_login()
-
-# # hide pages from non-palmer lab
-# if "palmerlab" not in st.session_state["user_cognito_groups"]:
-    # hide_pages(["Database Summary", "Sample Tracking"])
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
     
-# # sidebar pages
-# add_indentation()
-# show_pages_from_config()
-
-# # title
-# st.image('https://ratgenes.org/wp-content/uploads/2014/11/GWAS_1200x150pxBanner-01.png')
-# st.write("# Palmer Lab Database 🐀")
-
-# # body
-# st.markdown(
-#     """
-#     This application serves as a dashboard for the Palmer Lab database.
+    [Palmer Lab website](https://palmerlab.org)
     
-#     Pages:
-    
-#     Public
-#     - Genotyping Report
-    
-#     Palmer Lab Access:
-#     - Sample Tracking 
-#     - Summary
-
-#     Future:
-#     - project stuff
-#         - data dictionaries
-#     - visuals
-    
-#     Links:
-#     - [ratgenes.org](https://ratgenes.org)
-#     - [Palmer Lab website](https://palmerlab.org)
-
-#     This app was created with [streamlit](https://streamlit.io).
-# """
-# )
+    [ratgtex.org](https://ratgtex.org)
+    ''')
