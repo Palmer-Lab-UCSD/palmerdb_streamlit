@@ -20,6 +20,11 @@ name = "Sample Tracking"
 icon = ""
 
 [[pages]]
+path = "pages/dictionary.py"
+name = "Data Dictionary"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
