@@ -46,7 +46,7 @@ add_indentation()
 show_pages_from_config()
 if not is_logged_in:
     st.write('Please log in.')
-    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
+    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 elif is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
     def logout():
@@ -56,7 +56,7 @@ elif is_logged_in:
         st.button("Logout", "logout_btn", on_click=logout)
     if username != 'admin':
         st.write('You do not have permission to access this page :( If you think this is a mistake, please contact us.')
-        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
+        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
 if is_logged_in and username == 'admin':
 

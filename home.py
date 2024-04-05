@@ -43,7 +43,7 @@ username = authenticator.get_username()
 add_indentation()
 show_pages_from_config()
 if not is_logged_in:
-    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
+    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 elif is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
     def logout():
@@ -52,7 +52,7 @@ elif is_logged_in:
         st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
     if username != 'admin':
-        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary"])
+        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
 
 # title
