@@ -25,6 +25,11 @@ name = "Data Dictionary"
 icon = ""
 
 [[pages]]
+path = "pages/metadata.py"
+name = "Genotyping Metadata"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
