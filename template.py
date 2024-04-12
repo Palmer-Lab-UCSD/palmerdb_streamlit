@@ -28,6 +28,7 @@
 # pool_id = os.environ.get("POOL_ID")
 # app_client_id = os.environ.get("APP_CLIENT_ID")
 # app_client_secret = os.environ.get("APP_CLIENT_SECRET")
+# admin = os.environ.get("ADMIN")
 
 # authenticator = CognitoAuthenticator(
 #     pool_id=pool_id,
@@ -53,7 +54,7 @@
 #     with st.sidebar:
 #         st.write(f"Welcome, {authenticator.get_username()}!")
 #         st.button("Logout", "logout_btn", on_click=logout)
-#     if username != 'admin':
+#     if username != admin:
 #         st.write('You do not have permission to access this page :( If you think this is a mistake, please contact us.')
 #         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
@@ -66,7 +67,7 @@
 #     [ratgtex.org](https://ratgtex.org)
 #     ''')
 
-# if is_logged_in and username == 'admin':
+# if is_logged_in and username == admin:
 
 ###
 # '''

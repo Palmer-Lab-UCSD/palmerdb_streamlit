@@ -28,6 +28,7 @@ load_dotenv(dotenv_path)
 pool_id = os.environ.get("POOL_ID")
 app_client_id = os.environ.get("APP_CLIENT_ID")
 app_client_secret = os.environ.get("APP_CLIENT_SECRET")
+admin = os.environ.get("ADMIN")
 
 authenticator = CognitoAuthenticator(
     pool_id=pool_id,
@@ -54,11 +55,11 @@ elif is_logged_in:
     with st.sidebar:
         st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
-    if username != 'admin':
+    if username != admin:
         st.write('You do not have permission to access this page :( If you think this is a mistake, please contact us.')
         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
-if is_logged_in and username == 'admin':
+if is_logged_in and username == admin:
 
     st.title("Metadata for Genotyping")
     st.write("Please select a pool to begin.")
@@ -90,12 +91,12 @@ if is_logged_in and username == 'admin':
             begin transaction;
             SELECT
                 a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode,
-                case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' else 'rat' end as organism, 
-                case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
+                case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
+                case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
                 coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
                 coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                 coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
-                coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dames,
+                coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
                 a.fastq_files
             FROM sample_tracking.sample_barcode_lib AS a
             """
