@@ -46,7 +46,7 @@ username = authenticator.get_username()
 add_indentation()
 show_pages_from_config()
 if not is_logged_in:
-    st.write('Please log in.')
+    st.write('Please sign in.')
     hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 elif is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
@@ -55,11 +55,12 @@ elif is_logged_in:
     with st.sidebar:
         st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
-    if username != admin:
-        st.write('You do not have permission to access this page :( If you think this is a mistake, please contact us.')
+    if admin not in username:
+        st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
-if is_logged_in and username == admin:
+
+if is_logged_in and admin in username:
 
     st.title('Palmer Lab Database Samples')
     

@@ -53,7 +53,6 @@ elif is_logged_in:
         st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
     if admin not in username:
-        st.write('hello')
         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 
 
