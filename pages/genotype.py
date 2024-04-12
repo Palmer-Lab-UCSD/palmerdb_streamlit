@@ -49,8 +49,9 @@ elif is_logged_in:
     with st.sidebar:
         st.write(f"Welcome, {authenticator.get_username()}!")
         st.button("Logout", "logout_btn", on_click=logout)
-    if username != admin:
+    if admin not in username:
         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
+
 # content
 st.title('Genotype Reports')
 
