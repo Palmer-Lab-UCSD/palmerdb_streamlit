@@ -17,7 +17,10 @@ This directory contains ```config.toml```, ```pages.toml```, ```auth.env```, and
 This directory contains pages which appear in the app apart from the main page. Each python file is an individual page. Current pages are split into Palmer Lab access and public access sections. The pages are built with [streamlit-pages](https://github.com/blackary/st_pages).
 
 ##### components
-Contains logging component and functions for MedPC extractor.
+Contains authentication and logging components, functions for MedPC extractor.
+
+##### GWAS_pipeline
+Contains relevant files for GWAS tools.
 
 ### To launch:
 The main method of running this app is through an AWS ECS Service  ```streamlit``` as a Fargate instance. Within the instance, the application is run through a Docker container. To run the files locally, use the command:
