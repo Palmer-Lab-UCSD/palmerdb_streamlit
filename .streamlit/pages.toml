@@ -30,6 +30,26 @@ name = "Genotyping Metadata"
 icon = ""
 
 [[pages]]
+name = "Tools"
+is_section = true
+icon = ""
+
+[[pages]]
+path = "pages/medpc.py"
+name = "MedPC Extractor"
+icon = ""
+
+[[pages]]
+path = "pages/locuszoom.py"
+name = "Regional Association Tools"
+icon = ""
+
+[[pages]]
+path = "pages/report.py"
+name = "GWAS Reports"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
@@ -37,4 +57,9 @@ icon = ""
 [[pages]]
 path = "pages/genotype.py"
 name = "Genotyping Reports"
+icon = ""
+
+[[pages]]
+path = "pages/test.py"
+name = "test"
 icon = ""
