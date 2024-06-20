@@ -33,7 +33,7 @@ def start_auth():
     show_pages_from_config()
     if not is_logged_in:
         hide_pages(hidden)
-    elif is_logged_in:
+    elif is_logged_in and admin not in username:
         # log_action(logger, f'{filename}: authentication status: true, user name: {username}')
         def logout():
             authenticator.logout()
@@ -41,6 +41,6 @@ def start_auth():
             st.write(f"Welcome, {authenticator.get_username()}!")
             st.button("Logout", "logout_btn", on_click=logout)
         if admin not in username:
-            hide_pages([hidden])
+            hide_pages(hidden)
     
     return authenticator, username, hidden, admin, is_logged_in
