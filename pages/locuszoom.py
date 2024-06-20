@@ -36,8 +36,6 @@ else:
 
 # if is_logged_in:
 
-
-
 @st.experimental_fragment
 def phewas(self):
     self.phewas_widget()

@@ -14,8 +14,11 @@ def read_session_individual(s, remove_first: list = [], timestamp_measures = [] 
     a = re.compile('[\r\n]+\s+\d*[05]:').sub
     ratd = pd.DataFrame(re.findall('([\w ]+):(.+)\n', a('', s)+'\n'), columns = ['measure', 'value']).set_index('measure')
     ratd.loc[~ratd.index.str.contains('^[A-Z]$'), 'value'] = ratd.loc[~ratd.index.str.contains('^[A-Z]$'), 'value'].apply(lambda x:  re.sub('\s+$', '', re.sub('^\s+', '',x))  )
+
     ratd.loc[['Start Date', 'End Date'], 'value'] = pd.to_datetime(ratd.loc[['Start Date', 'End Date'], 'value'].reset_index(drop= True) +' '
                                                                + ratd.loc[['Start Time', 'End Time'], 'value'].reset_index(drop= True), format='mixed', dayfirst=False).values
+    
+    
     values = ratd[ratd.index.str.contains('^[A-Z]$')]
     values = values.applymap(lambda x: np.array([float(y) for y in re.sub('\s+', ' ', x).strip(' ').split(' ')])).explode('value')
     metadata = ratd[~ratd.index.str.contains('^[A-Z]$')].drop(['Start Time', 'End Time']).value.to_dict()
@@ -52,16 +55,26 @@ def add_final_order(df):
             .sort_values(['Subject','measure_timestamp','measure']).reset_index(drop = True)
 
 def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {},  subset_named_measures = False, timestamp_measures = []):
-    # if not os.path.isfile(filename):
+    # if not os.path.isfile(filename)
     #     raise IOError(f'Could not find file {filename}')
     # with open(filename, 'r') as f: 
         # filen = f.readline().replace('File: ', '').strip('\n').strip(' ').strip('\t')
         # t = f.read().replace('\r', '').strip('\n') + '\n'
-    filen = filename.split('\n',1)[0] #.readline()
-    t = filename.split('\n',1)[1].strip('\n') + '\n'
-    ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) 
-                      for x in re.split('\n\n+', t)]) \
-             .assign(file = filen).reset_index()
+    if 'File' in filename:
+        filen = filename.split('\n',1)[0] #.readline()
+        t = filename.split('\n',1)[1].strip('\n').replace('\n\n\n', '') + '\n'
+        t = t.rstrip()
+    else:
+        filen = filename
+        t = filename.strip('\n').replace('Start Date', '\nStart Date').replace('Start Time: 21:00:00', 'Start Time: 9:00:00')
+    
+    try:
+        ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) 
+                  for x in re.split('\n{2,}', t)]).assign(file = filen).reset_index()
+    except:
+        print(f'{filename} separation by "\\n\\n+" failed trying by "Start Date:"')
+        ret =  pd.concat([read_session_individual('Start Date:'+x, remove_first='', timestamp_measures = timestamp_measures) 
+                  for x in re.split('Start Date:', t) if len(x)]).assign(file = filename).reset_index()
     
     if len(measure_name_dict):
         measure_name_dict = defaultdict(lambda: 0,measure_name_dict )
@@ -76,7 +89,6 @@ def read_session_individual_oldformat(text):
     metadata =  rat[(~rat.value.str.contains('__') | rat.value.str.contains('[A-Za-z]')) &~rat.index.str.contains('Total|^fr$') ].value.to_dict()
     try:rat.loc['IRItype'] = rat.loc['IRItype'].str.split('__')
     except:
-        st.write(text)
         return pd.DataFrame()
     ts = rat.loc[['IRI', 'IRICode'], :]
     ts = ts.value.str.split('__', expand= True).iloc[:, 2:]
@@ -120,8 +132,6 @@ def read_session_individual_oldformat(text):
     return out.reset_index().set_index(['Subject', 'measure', 'value']).reset_index()
 
 
-
-
 def read_file_old_format(filename, measure_name_dict = {},  subset_named_measures = False, verbose = False):
     # if not os.path.isfile(filename): raise IOError(f'Could not find file {filename}')
     # with open(filename) as f:
@@ -142,7 +152,7 @@ def read_file_old_format(filename, measure_name_dict = {},  subset_named_measure
             out= out[out.measure.isin(measure_name_dict.values())]    
     if not verbose:
         out = out.loc[:, ~out.columns.str.contains('^RewardPrimary|^RewardSecondary|^BackGround|^StartingPrimary|^StartingSecondary|^IRItype|^binNumber')]
-    st.dataframe(out)
+    
     return out
 
 def read_medpc_files(filenames, remove_first: list = [], measure_name_dict = {},  subset_named_measures = False, timestamp_measures = []):

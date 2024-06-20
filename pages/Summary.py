@@ -21,43 +21,6 @@ st.set_page_config(
 logger = setup_logger()
 filename = os.path.basename(__file__)
 
-log_action(logger, f'page: {filename}')
-
-# dotenv_path = os.path.join(os.getcwd(), '.streamlit', 'auth.env')
-# load_dotenv(dotenv_path)
-# pool_id = os.environ.get("POOL_ID")
-# app_client_id = os.environ.get("APP_CLIENT_ID")
-# app_client_secret = os.environ.get("APP_CLIENT_SECRET")
-# admin = os.environ.get("ADMIN")
-
-# authenticator = CognitoAuthenticator(
-#     pool_id=pool_id,
-#     app_client_id=app_client_id,
-#     app_client_secret=app_client_secret,
-#     use_cookies=False
-# )
-
-# with st.sidebar:
-#     is_logged_in = authenticator.login()
-
-    
-# username = authenticator.get_username()
-# # sidebar pages
-# add_indentation()
-# show_pages_from_config()
-# if not is_logged_in:
-#     st.write('Please sign in.')
-#     hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
-# elif is_logged_in:
-#     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
-#     def logout():
-#         authenticator.logout()
-#     with st.sidebar:
-#         st.write(f"Welcome, {authenticator.get_username()}!")
-#         st.button("Logout", "logout_btn", on_click=logout)
-#     if admin not in username:
-#         st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
-#         hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
 log_action(logger, f'{filename}: page entered')
 
 authenticator, username, hidden, admin, is_logged_in= start_auth()
