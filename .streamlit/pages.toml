@@ -59,7 +59,3 @@ path = "pages/genotype.py"
 name = "Genotyping Reports"
 icon = ""
 
-[[pages]]
-path = "pages/test.py"
-name = "test"
-icon = ""
