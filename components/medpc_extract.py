@@ -55,11 +55,7 @@ def add_final_order(df):
             .sort_values(['Subject','measure_timestamp','measure']).reset_index(drop = True)
 
 def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {},  subset_named_measures = False, timestamp_measures = []):
-    # if not os.path.isfile(filename)
-    #     raise IOError(f'Could not find file {filename}')
-    # with open(filename, 'r') as f: 
-        # filen = f.readline().replace('File: ', '').strip('\n').strip(' ').strip('\t')
-        # t = f.read().replace('\r', '').strip('\n') + '\n'
+
     if 'File' in filename:
         filen = filename.split('\n',1)[0] #.readline()
         t = filename.split('\n',1)[1].strip('\n').replace('\n\n\n', '') + '\n'
