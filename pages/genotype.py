@@ -66,4 +66,6 @@ with st.sidebar:
     [Palmer Lab website](https://palmerlab.org)
     
     [ratgtex.org](https://ratgtex.org)
+    
+    Palmer Lab IRS
     ''')

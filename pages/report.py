@@ -80,3 +80,15 @@ if is_logged_in:
 
             # display
             components.iframe(report, width=None, height=800, scrolling=True)
+            
+            
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
+    
+    [Palmer Lab website](https://palmerlab.org)
+    
+    [ratgtex.org](https://ratgtex.org)
+    
+    Palmer Lab IRS
+    ''')
