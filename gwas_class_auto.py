@@ -811,7 +811,7 @@ class gwas_pipe:
         self.genome = genome
         self.threshold = threshold
         self.threshold05 = threshold05
-        self.gtf = pd.read_csv(gtf)
+        self.gtf = pd.read_csv(gtf, low_memory=False)
         self.project_name = project_name
 
         logging.basicConfig(filename=f'{self.path}gwasRun.log', 
@@ -2567,7 +2567,8 @@ class gwas_pipe:
                     --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - padding)} --end {int(range_interest["max"] + padding)} --build manual \
                     --db ./GWAS_pipeline/databases/{genome_lz_path}.db \
                     --plotonly showRecomb=FALSE showAnnot=FALSE --prefix {self.path}temp/{qtl_row.trait} signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
-                    title = "{qtl_row.trait} SNP {qtl_row.SNP}" >/dev/null 2>&1''') #module load R && module load python && > /dev/null 2>&1 
+                    title = "{qtl_row.trait} SNP {qtl_row.SNP}" \
+                    prelude="./GWAS_pipeline/locuszoom/bin/locuszoom/prelude.R" >/dev/null 2>&1''') #module load R && module load python && > /dev/null 2>&1 
                 os.makedirs(f'{self.path}images/lz/6Mb/', exist_ok = True)
                 status.update(label=f'Running original locuszoom...🐀🐀', state='running')
                 
@@ -2576,7 +2577,8 @@ class gwas_pipe:
                     --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - int(3e6))} --end {int(range_interest["max"] + int(3e6))} --build manual \
                     --db ./GWAS_pipeline/databases/{genome_lz_path}.db \
                     --plotonly showRecomb=FALSE showAnnot=FALSE --prefix {self.path}images/lz/6Mb/lz__{qtl_row.trait}_6Mb signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
-                    title = "{qtl_row.trait} SNP {qtl_row.SNP} 6Mb" >/dev/null 2>&1'''
+                    title = "{qtl_row.trait} SNP {qtl_row.SNP} 6Mb" \
+                    prelude="./GWAS_pipeline/locuszoom/bin/locuszoom/prelude.R" >/dev/null 2>&1'''
                 os.system(lz12mbCall) #module load R && module load python && {self.locuszoom_path}bin/locuszoom 
                 status.update(label=f'Running original locuszoom...🐀🐀🐀', state='running')
                 if print_call: print(lz12mbCall)
@@ -2812,42 +2814,14 @@ class gwas_pipe:
             display(tempqtls)
             self.locuszoom(qtltable = tempqtls.assign(QTL = True, trait = trait, interval_size = 'UNK', significance_level = 'UNK') , 
                            save = False, qtl_r2_thresh=qtl_r2_thresh, padding=padding)
-            # st.image(f'{self.path}images/lz/lz__{trait}__{aa.SNP.replace(":", "_")}.png', width = 900)#, height = 400)#.save('locuszoom.html')
+
             pn.Column(
                 pn.pane.Image(f'{self.path}images/lz/lz__{trait}__{aa.SNP.replace(":", "_")}.png', width=900),
                 pn.widgets.FileDownload(file=f'{self.path}images/lz/lz__{trait}__{aa.SNP.replace(":", "_")}.png',\
                                         filename=f'lz__{trait}__{aa.SNP.replace(":", "_")}.png',\
                                        button_style='solid', button_type='success', icon='download', embed=True)
                 ).save('locuszoom.html')
-            
-#             image_path = f'{self.path}images/lz/lz__{trait}__{aa.SNP.replace(":", "_")}.png' # Replace with your image path
-#             image = Image.open(image_path)
-#             image_array = np.array(image)
-#             pickle_path = 'image.pkl'  # Path where the pickle file will be saved
 
-#             with open(pickle_path, 'wb') as f:
-#                 pickle.dump(image_array, f)
-
-#             @st.cache_data
-#             def open_img():
-#                 with open(pickle_path, 'rb') as f:
-#                     loaded_image_array = pickle.load(f)
-#                     loaded_image = Image.fromarray(loaded_image_array)
-#                     return loaded_image
-                
-#             img = open_img()
-#             buffer = byte.BytesIO()
-#             img.save(buffer, format="PNG")
-#             img = st.image(img, width=900)
-#             st.download_button(
-#                 label="Download image",
-#                 data=buffer,
-#                 file_name=f'{trait}__{aa.SNP.replace(":", "_")}.png',
-#                 mime="image/png")
-            
-            # pn.extension('plotly')
-            # display(pn.pane.Plotly(plotly_read_from_html(f'{self.path}images/lz/lz__{trait}__{aa.SNP.replace(":", "_")}.html'), width = 600, height = 400))
-            # display(pn.pane.PNG(f'{self.path}images/lz/6Mb/lz__{trait}_6Mb__{aa.SNP.replace(":", "_")}.png', width = 600, height = 400))
             return 
         if cloc is not None and ctrait is not None:
             if st.button("Run Locuszoom", type='primary'):
@@ -3194,8 +3168,7 @@ class gwas_pipe:
         '''
         printwithlog(f'starting spliceqtl ... {self.project_name}') 
         mygene_species = {'rn6': 'rat', 'rn7': 'rat', 'm38': 'mouse', 'cfw': 'mouse'}[self.genome]
-        #d =  {'rn6': '', 'rn7': '.
-        .2'}[genome]
+        #d =  {'rn6': '', 'rn7': '.2'}[genome]
         if self.genome not in ['rn6', 'rn7']: 
             pd.DataFrame(columns = ['trait', 'SNP', '-log10(P-value)', 'R2', 'SNP_sqtldb', 'tissue',
                                     '-log10(pval_nominal)', 'DP', 'Ensembl_gene', 'gene_id', 'slope', 'tss_distance', 'af', 'presence_samples']).to_csv(f'{self.path}results/sqtl/pretty_sqtl_table.csv', index = False)
