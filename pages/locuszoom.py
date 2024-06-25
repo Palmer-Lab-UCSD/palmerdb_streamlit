@@ -1,5 +1,5 @@
 """
-# This page is an template for the GWAS reports.
+# This page is for the locuszoom and phewas.
 """
 
 import streamlit as st
@@ -14,7 +14,8 @@ from st_pages import show_pages_from_config, add_indentation, hide_pages
 import streamlit.components.v1 as components
 import time
 import wget
-from zipfile import ZipFile 
+from zipfile import ZipFile
+import shutil
 from GWAS_pipeline.gwas_class_auto import *
 
 st.set_page_config(
@@ -32,7 +33,6 @@ authenticator, username, hidden, admin, is_logged_in= start_auth()
 if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
 
-# if is_logged_in:
 
 @st.experimental_fragment
 def phewas(self):
@@ -47,9 +47,16 @@ def locuszoom(self):
 def reset():
     if 'gwas' in st.session_state:
         del st.session_state['gwas']
+    files = os.listdir('.')
+    zip_files = [file for file in files if file.endswith('.zip')]
+    if len(zip_files) > 3:
+        for file in zip_files[:-1]:
+            os.remove(file)
+        if os.path.exists('tscc') and os.path.isdir('tscc'):
+            shutil.rmtree('tscc')
 
 st.header('GWAS Tools')
-st.write('''Please use the following tools to customize Phenotype Wide Association Study (PheWAS) tables and Regional Association Plots (Locuszoom) for your projects.''')
+st.write('''The following tools can be used to customize Phenotype Wide Association Study (PheWAS) tables and Regional Association Plots (Locuszoom) for your projects.''')
 
 with st.expander('###### :green[Usage Notes and Tips]', expanded=True):
     st.write('''
@@ -62,10 +69,11 @@ with st.expander('###### :green[Usage Notes and Tips]', expanded=True):
 - To use the tools, fill in the parameters in the dropdowns, and click the "Run" button.
 - The program uses the rn7 gene list from NCBI RefSeq from NCBI GTF.
 - In case of errors or extremely poor performance, it is recommended to refresh the webpage to fully reset.''')
+    
 
 if is_logged_in:
     # prepare reading files
-    files_df = pd.read_csv('gwas_files.csv')
+    files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
     if admin not in username:
         files_df = files_df.loc[files_df.project.str.contains(username.split('_')[0])]
     project_list = sorted(files_df.project.unique().tolist())    
@@ -81,10 +89,6 @@ if is_logged_in:
         file = st.selectbox(label='Report Files:', options=filelist, placeholder='Pick a report file:', index=None, on_change=reset())
         if file is not None and 'LATEST' in file:
             file = file[9:]
-
-    # # manual, for later deletion
-    # project = st.text_input(label='Project', placeholder='Enter project name', on_change=reset)
-    # file = st.text_input(label='Filename', placeholder='Enter file name', on_change=reset)
 
         if 'gwas' not in st.session_state:
             if file is not None and project is not None:
@@ -108,18 +112,26 @@ if is_logged_in:
                 st.stop()
 
             df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
-            gwas = gwas_pipe(path = f'./tscc/projects/ps-palmer/gwas/projects/{project}/',
+            
+            # edge
+            if os.path.isdir(f'./tscc/projects/ps-palmer/gwas/projects/{project}/'):
+                path = f'./tscc/projects/ps-palmer/gwas/projects/{project}/'
+            else:
+                path = f'./{project}'
+                
+            # init
+            gwas = gwas_pipe(path = path,
                          data = df,
                          project_name = f'{project}',
                          n_autosome =20,
-                         all_genotypes =  f'./tscc/projects/ps-palmer/gwas/projects/{project}/genotypes/genotypes',
+                         all_genotypes =  path + '/genotypes/genotypes',
                          traits = [], 
                          threshold=5.36,
                          founderfile = '/founder_genotypes/founders7.2',
                          locuszoom_path='/GWAS_pipeline/locuszoom/',
                          phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
                          threads = 6,
-                         gtf = f'./GWAS_pipeline/rn_7_gtf.csv')
+                         gtf = f'https://www.dropbox.com/scl/fi/ai1fw6fxsazns0pt40yec/rn_7_gtf.csv?rlkey=ovyi0mdaz71oci9mhtxchhvxw&dl=1')
             self = gwas
             st.session_state['gwas'] = self
 
@@ -130,10 +142,9 @@ if is_logged_in:
             phewas(self)
             st.write('##### Locuszoom Plot: ')
             locuszoom(self)
-            # self.phewas_widget()
-            # self.locuszoom_widget()
-            # self.locuszoom_interactive()
 
             if st.button("Refresh"):
+                # hard clear
                 reset()
                 st.rerun()
+                

@@ -1,3 +1,7 @@
+"""
+# This page is for the GWAS reports.
+"""
+
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -44,7 +48,7 @@ def extract_date(input_string):
 st.title('GWAS Reports')
 st.write('Please sign in to access an archive of GWAS reports for your projects.')
     
-data = './gwas_reports.csv'
+data = 'https://www.dropbox.com/scl/fi/wrhelbhblbqp294epvbyg/gwas_reports.csv?rlkey=byxwurl53dvdenkywv8r4rvpe&dl=1'
 
 if is_logged_in:
     df = pd.read_csv(data)
