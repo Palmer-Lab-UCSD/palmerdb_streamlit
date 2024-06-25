@@ -28,8 +28,6 @@ log_action(logger, f'{filename}: page entered')
 authenticator, username, hidden, admin, is_logged_in= start_auth()
 if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
-else:
-    st.write('Please sign in.')
 
 
 st.title("MedPC Extraction Tool")
@@ -88,12 +86,8 @@ def reset():
     st.session_state.clear()
     st.cache_data.clear()
     return
-    
-if st.button(''):
-    importlib.reload(medpc_extract)
 
     
-
 files = st.file_uploader('Upload a MedPC file', type=None, accept_multiple_files=True, label_visibility="visible")
     
 if len(files) > 0:
