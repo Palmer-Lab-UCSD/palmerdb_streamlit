@@ -56,9 +56,11 @@ if is_logged_in:
     # filter projects by login username 
     if admin not in username:
         df = df.loc[df.project.str.contains(username.split('_')[0])]
+        log_action(logger, f'{filename}: filtered project {username}')
 
     b = st.selectbox(label='Select a project:', options=sorted(df.project.unique()), index=None, placeholder='Project name')
     if b is not None:
+        log_action(logger, f'{filename}: selected project {b}')
         df2 = df.loc[df.project == b]
 
         a = list(zip(df2['samples'].tolist(), df2['date'].tolist()))
@@ -69,6 +71,7 @@ if is_logged_in:
         c = st.selectbox(label='Select a report to view:', options=a, index=None, placeholder='number of samples, date of GWAS')
 
         if c is not None:
+            log_action(logger, f'{filename}: selected report {c}')
             selected_n = re.search(r'n\d+,', c).group(0)[:-1]
             selected_date = extract_date(c)
 
