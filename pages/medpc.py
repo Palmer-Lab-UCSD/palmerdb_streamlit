@@ -152,6 +152,7 @@ if 'df' in st.session_state:
     
     if bins == 'Total':
         if st.button('Pivot'):
+            log_action(logger, f'{filename}: pivot table')
             if 'pivot' in st.session_state:
                 del st.session_state['pivot']
             alcohol_exp = ['Subject', 'DAY01', 'DAY02', 'DAY03', 'DAY04', 'DAY05', 'DAY06', 'DAY07', 'DAY08', 'DAY09', 'PR', 'DAY10', '1Q', 'DAY11', '3Q', 'DEP01', 'DEP02', 'DEP03', 'DEP04', 'DEP05', 'DEP06', 'DEP07', 'DEP08', 'DEP09', 'DEP10', 'DEP11', 'DEP12', 'DEPPR', 'DEP13', 'DEP1Q', 'DEP14', 'DEP3Q']
@@ -172,6 +173,7 @@ if 'df' in st.session_state:
         
     else:
         if st.button('Pivot'):
+            log_action(logger, f'{filename}: pivot table')
             if 'pivot' in st.session_state:
                 del st.session_state['pivot']
             pivot_df = df.pivot_table(index='Subject', columns='name', values='value',

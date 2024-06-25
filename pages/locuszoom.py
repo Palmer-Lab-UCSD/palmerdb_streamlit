@@ -45,6 +45,7 @@ def locuszoom(self):
     return
 
 def reset():
+    # do not store more than 3 zip files
     if 'gwas' in st.session_state:
         del st.session_state['gwas']
     files = os.listdir('.')
@@ -76,18 +77,22 @@ if is_logged_in:
     files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
     if admin not in username:
         files_df = files_df.loc[files_df.project.str.contains(username.split('_')[0])]
+        log_action(logger, f'{filename}: filtered projects: {username}')
     project_list = sorted(files_df.project.unique().tolist())    
 
     # input project and filter
     project = st.selectbox(label='Projects', options=project_list, placeholder='Pick a project:', index=None, on_change=reset())
     if project is not None:
+        log_action(logger, f'{filename}: selected project {project}')
         files_df = files_df.loc[files_df.project == project].sort_values(by='modified', ascending=False)
         filelist = files_df.file.str.split('/').str[-1].unique().tolist()
         filelist[0] = '[LATEST] ' + filelist[0]
+        
 
         # input file
         file = st.selectbox(label='Report Files:', options=filelist, placeholder='Pick a report file:', index=None, on_change=reset())
         if file is not None and 'LATEST' in file:
+            log_action(logger, f'{filename}: selected file {file}')
             file = file[9:]
 
         if 'gwas' not in st.session_state:
@@ -96,12 +101,14 @@ if is_logged_in:
                 with st.status("Initializing...") as status:
                     status.update(label="Downloading data...", state="running")
                     if os.path.isfile(file):
+                        log_action(logger, f'{filename}: already have {url} unzipping')
                         with ZipFile(f"{file}", 'r') as zObject:
                             status.update(label="Unzipping data...", state='running')
                             zObject.extractall() 
                             status.update(label='Ready!', state='complete')
                     else:
                         filename = wget.download(url)
+                        log_action(logger, f'{filename}: downloading {url}')
                         with ZipFile(f"{filename}", 'r') as zObject:
                             status.update(label="Download complete.", state="complete")
                             time.sleep(3)
@@ -120,6 +127,7 @@ if is_logged_in:
                 path = f'./{project}'
                 
             # init
+            log_action(logger, f'{filename}: initializing')
             gwas = gwas_pipe(path = path,
                          data = df,
                          project_name = f'{project}',
