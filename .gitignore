@@ -170,3 +170,9 @@ components/cognito.env
 */.DS_Store
 .DS_Store
 /.streamlit/auth.env
+bin/
+share/
+lib/
+genotypes/
+founder_genotypes/
+/.streamlit/credentials.toml

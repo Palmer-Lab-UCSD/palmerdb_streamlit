@@ -3,6 +3,7 @@
 """
 import streamlit as st
 from components.logger import *
+from components.authenticate import *
 import os
 from streamlit_cognito_auth import CognitoAuthenticator
 from dotenv import load_dotenv
@@ -16,48 +17,22 @@ st.set_page_config(
 logger = setup_logger()
 filename = os.path.basename(__file__)
 
-log_action(logger, f'page: {filename}')
+log_action(logger, f'{filename}: page entered')
 
-dotenv_path = os.path.join(os.getcwd(), '.streamlit', 'auth.env')
-load_dotenv(dotenv_path)
-pool_id = os.environ.get("POOL_ID")
-app_client_id = os.environ.get("APP_CLIENT_ID")
-app_client_secret = os.environ.get("APP_CLIENT_SECRET")
-admin = os.environ.get("ADMIN")
-
-authenticator = CognitoAuthenticator(
-    pool_id=pool_id,
-    app_client_id=app_client_id,
-    app_client_secret=app_client_secret,
-    use_cookies=False
-)
-
-with st.sidebar:
-    is_logged_in = authenticator.login()
-
-    
-username = authenticator.get_username()
-# sidebar pages
-add_indentation()
-show_pages_from_config()
-if not is_logged_in:
-    hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
-elif is_logged_in:
+authenticator, username, hidden, admin, is_logged_in= start_auth()
+if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
-    def logout():
-        authenticator.logout()
-    with st.sidebar:
-        st.write(f"Welcome, {authenticator.get_username()}!")
-        st.button("Logout", "logout_btn", on_click=logout)
-    if admin not in username:
-        hide_pages(["Database Summary", "Sample Tracking", "Data Dictionary", "Genotyping Metadata"])
+
+
+if is_logged_in and admin not in username:
+    st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
 
 # content
 st.title('Genotype Reports')
 
 st.markdown(
     """
-    The genotyping reports are available at the UC San Diego Library Digital Collections.
+    Genotyping reports are available at the UC San Diego Library Digital Collections.
     
     [Genotype data from: NIDA Center for GWAS in Outbred rats](https://library.ucsd.edu/dc/collection/bb5403210b)
     
@@ -74,7 +49,7 @@ st.markdown(
         - report.html
     
     They can be found at the following links:
-    - **LATEST: ["round10.2", mRatBN7.2, 2024-01-18](https://library.ucsd.edu/dc/object/bb29129987)**
+    - **["round10.2", mRatBN7.2, 2024-01-18](https://library.ucsd.edu/dc/object/bb29129987) [LATEST]**
     - ["round10.1", mRatBN7.2, 2023-07-12](https://library.ucsd.edu/dc/object/bd6647448j)
     - ["round10", mRatBN7.2, 2023-02-22](https://library.ucsd.edu/dc/object/bb0079998p)
     - ["round8", rn6, 2019-08-15](https://library.ucsd.edu/dc/object/bb15123938)
@@ -91,4 +66,6 @@ with st.sidebar:
     [Palmer Lab website](https://palmerlab.org)
     
     [ratgtex.org](https://ratgtex.org)
+    
+    Palmer Lab IRS
     ''')
