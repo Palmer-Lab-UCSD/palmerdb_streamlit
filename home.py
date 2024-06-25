@@ -45,7 +45,7 @@ st.markdown(
 with st.container(border=True):
     st.write('##### :green[Updates]')
     updates = st.chat_message('Palmer Lab', avatar='chat.png')
-    updates.write("**v1.1:** Added tools: GWAS Report Archive, Locuszoom Generator, MedPC Extractor. Sign in to access!")
+    updates.write("Added tools: GWAS Report Archive, Locuszoom Generator, MedPC Extractor. Sign in to access!")
 
 with st.sidebar:
     st.markdown('''
@@ -55,7 +55,7 @@ with st.sidebar:
     
     [ratgtex.org](https://ratgtex.org)
     
-    Palmer Lab IRS v1.1.0
+    Palmer Lab IRS
     ''')
     
     

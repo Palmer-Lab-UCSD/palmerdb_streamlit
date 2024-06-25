@@ -197,4 +197,14 @@ if 'df' in st.session_state:
             st.cache_data.clear()
             st.session_state.clear()
             st.rerun()
+
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
     
+    [Palmer Lab website](https://palmerlab.org)
+    
+    [ratgtex.org](https://ratgtex.org)
+    
+    Palmer Lab IRS
+    ''')

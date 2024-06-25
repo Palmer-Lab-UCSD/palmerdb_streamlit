@@ -114,11 +114,3 @@ if is_logged_in and admin in username:
         log_action(logger, f'{filename}: refresh button clicked')
         st.cache_data.clear()
 
-with st.sidebar:
-    st.markdown('''
-    [ratgenes.org](https://ratgenes.org)
-    
-    [Palmer Lab website](https://palmerlab.org)
-    
-    [ratgtex.org](https://ratgtex.org)
-    ''')
