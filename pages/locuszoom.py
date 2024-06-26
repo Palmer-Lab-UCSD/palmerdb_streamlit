@@ -50,14 +50,17 @@ def reset():
         del st.session_state['gwas']
     files = os.listdir('.')
     zip_files = [file for file in files if file.endswith('.zip')]
-    if len(zip_files) > 3:
+    if len(zip_files) > 2:
         for file in zip_files[:-1]:
             os.remove(file)
         if os.path.exists('tscc') and os.path.isdir('tscc'):
             shutil.rmtree('tscc')
 
 st.header('GWAS Tools')
-st.write('''The following tools can be used to customize Phenotype Wide Association Study (PheWAS) tables and Regional Association Plots (Locuszoom) for your projects.''')
+st.write('''The following tools can be used to customize Phenotype Wide Association Study (PheWAS) tables and Regional Association Plots (Locuszoom) for your projects.
+
+Please sign in to view available projects.
+''')
 
 with st.expander('###### :green[Usage Notes and Tips]', expanded=True):
     st.write('''
@@ -105,7 +108,7 @@ if is_logged_in:
                         with ZipFile(f"{file}", 'r') as zObject:
                             status.update(label="Unzipping data...", state='running')
                             zObject.extractall() 
-                            status.update(label='Ready!', state='complete')
+                            status.update(label='Ready! Initializing object.', state='complete')
                     else:
                         filename = wget.download(url)
                         log_action(logger, f'{filename}: downloading {url}')
@@ -113,7 +116,8 @@ if is_logged_in:
                             status.update(label="Download complete.", state="complete")
                             time.sleep(3)
                             status.update(label="Unzipping data...", state='running')
-                            zObject.extractall() 
+                            zObject.extractall()
+                            status.update(label="Ready! Initializing object.", state='complete')
                     
             else:
                 st.stop()
@@ -126,22 +130,23 @@ if is_logged_in:
             else:
                 path = f'./{project}'
                 
-            # init
-            log_action(logger, f'{filename}: initializing')
-            gwas = gwas_pipe(path = path,
-                         data = df,
-                         project_name = f'{project}',
-                         n_autosome =20,
-                         all_genotypes =  path + '/genotypes/genotypes',
-                         traits = [], 
-                         threshold=5.36,
-                         founderfile = '/founder_genotypes/founders7.2',
-                         locuszoom_path='/GWAS_pipeline/locuszoom/',
-                         phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
-                         threads = 6,
-                         gtf = f'https://www.dropbox.com/scl/fi/ai1fw6fxsazns0pt40yec/rn_7_gtf.csv?rlkey=ovyi0mdaz71oci9mhtxchhvxw&dl=1')
-            self = gwas
-            st.session_state['gwas'] = self
+            if len(path) > 0:
+                # init
+                log_action(logger, f'{filename}: initializing')
+                gwas = gwas_pipe(path = path,
+                             data = df,
+                             project_name = f'{project}',
+                             n_autosome =20,
+                             all_genotypes =  path + '/genotypes/genotypes',
+                             traits = [], 
+                             threshold=5.36,
+                             founderfile = 'founder_genotypes/founders7.2',
+                             locuszoom_path='GWAS_pipeline/locuszoom/',
+                             phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
+                             threads = 6,
+                             gtf = f'https://www.dropbox.com/scl/fi/ai1fw6fxsazns0pt40yec/rn_7_gtf.csv?rlkey=ovyi0mdaz71oci9mhtxchhvxw&dl=1')
+                self = gwas
+                st.session_state['gwas'] = self
 
 
         if 'gwas' in st.session_state:
