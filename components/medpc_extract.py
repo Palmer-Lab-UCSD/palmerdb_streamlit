@@ -65,8 +65,7 @@ def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {
         t = filename.strip('\n').replace('Start Date', '\nStart Date').replace('Start Time: 21:00:00', 'Start Time: 9:00:00')
     
     try:
-        ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) 
-                  for x in re.split('\n{2,}', t)]).assign(file = filen).reset_index()
+        ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) for x in re.split('\n{2,}', t)]).assign(file = filen).reset_index()
     except:
         print(f'{filename} separation by "\\n\\n+" failed trying by "Start Date:"')
         ret =  pd.concat([read_session_individual('Start Date:'+x, remove_first='', timestamp_measures = timestamp_measures) 
