@@ -14,7 +14,6 @@ def read_session_individual(s, remove_first: list = [], timestamp_measures = [] 
     a = re.compile('[\r\n]+\s+\d*[05]:').sub
     ratd = pd.DataFrame(re.findall('([\w ]+):(.+)\n', a('', s)+'\n'), columns = ['measure', 'value']).set_index('measure')
     ratd.loc[~ratd.index.str.contains('^[A-Z]$'), 'value'] = ratd.loc[~ratd.index.str.contains('^[A-Z]$'), 'value'].apply(lambda x:  re.sub('\s+$', '', re.sub('^\s+', '',x))  )
-
     ratd.loc[['Start Date', 'End Date'], 'value'] = pd.to_datetime(ratd.loc[['Start Date', 'End Date'], 'value'].reset_index(drop= True) +' '
                                                                + ratd.loc[['Start Time', 'End Time'], 'value'].reset_index(drop= True), format='mixed', dayfirst=False).values
     
@@ -55,7 +54,6 @@ def add_final_order(df):
             .sort_values(['Subject','measure_timestamp','measure']).reset_index(drop = True)
 
 def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {},  subset_named_measures = False, timestamp_measures = []):
-
     if 'File' in filename:
         filen = filename.split('\n',1)[0] #.readline()
         t = filename.split('\n',1)[1].strip('\n').replace('\n\n\n', '')
@@ -64,12 +62,12 @@ def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {
         filen = filename
         t = filename.strip('\n').replace('Start Date', '\nStart Date').replace('Start Time: 21:00:00', 'Start Time: 9:00:00')
     
-    try:
-        ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) for x in re.split('\n{2,}', t)]).assign(file = filen).reset_index()
-    except:
-        print(f'{filename} separation by "\\n\\n+" failed trying by "Start Date:"')
-        ret =  pd.concat([read_session_individual('Start Date:'+x, remove_first='', timestamp_measures = timestamp_measures) 
-                  for x in re.split('Start Date:', t) if len(x)]).assign(file = filename).reset_index()
+    # try:
+    ret =  pd.concat([read_session_individual(x, remove_first=remove_first, timestamp_measures = timestamp_measures) for x in re.split('\n{2,}', t)]).assign(file = filen).reset_index()
+    # except:
+    #     print(f'{filename} separation by "\\n\\n+" failed trying by "Start Date:"')
+    #     ret =  pd.concat([read_session_individual('Start Date:'+x, remove_first='', timestamp_measures = timestamp_measures) 
+    #               for x in re.split('Start Date:', t) if len(x)]).assign(file = filename).reset_index()
     
     if len(measure_name_dict):
         measure_name_dict = defaultdict(lambda: 0,measure_name_dict )
