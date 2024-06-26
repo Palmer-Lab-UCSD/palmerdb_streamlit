@@ -58,7 +58,7 @@ def read_file(filename: str = '', remove_first: list = [], measure_name_dict = {
 
     if 'File' in filename:
         filen = filename.split('\n',1)[0] #.readline()
-        t = filename.split('\n',1)[1].strip('\n').replace('\n\n\n', '') + '\n'
+        t = filename.split('\n',1)[1].strip('\n').replace('\n\n\n', '')
         t = t.rstrip()
     else:
         filen = filename
