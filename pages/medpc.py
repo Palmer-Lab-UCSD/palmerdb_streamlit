@@ -119,6 +119,7 @@ if 'df' in st.session_state:
     if 'ALCOHOL' in df.file.iloc[0] or 'Backup' in df.file.iloc[0]:
         bins = st.selectbox("Choose bins (clear for all)", 
                             ('Total', 'Individual Bins'), index=None, key=1)
+        df['name'] = df.file.apply(lambda x: exp_name_alc(x))
     else: 
         bins = None
         df['name'] = df.file.apply(lambda x: exp_name_george(x))
