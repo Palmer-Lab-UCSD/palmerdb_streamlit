@@ -3597,7 +3597,12 @@ class gwas_pipe:
         temp['##CHROM'] = 'chr'+ temp['##CHROM'].astype(str)
         vcf_manipulation.pandas2vcf(temp, f'{self.path}temp/test.vcf', metadata='')
         #a = bash(f'java -Xmx8g -jar {self.snpeff_path}snpEff.jar {d} -noStats {self.path}temp/test.vcf', print_call = False )# 'snpefftest',  -no-intergenic -no-intron
-        a = bash(f'$CONDA_PREFIX/share/snpeff-5.2-0/snpEff -Xmx8g {d} -noStats {self.path}temp/test.vcf', shell = True, silent = False, print_call = True )
+        conda_prefix = '/opt/conda/envs/gwas'
+        snpeff_dir_pattern = os.path.join(conda_prefix, 'share', 'snpeff-*')
+        snpeff_dirs = glob(snpeff_dir_pattern)
+        snpeff_dir = snpeff_dirs[0] + '/snpEff'
+        command = f'{snpeff_dir} -Xmx8g {d} -noStats {self.path}temp/test.vcf'
+        a = bash(command, shell = True, silent = False, print_call = True )
         #a = subprocess.run(f'$CONDA_PREFIX/share/snpeff-5.2-0/snpEff -Xmx8g {d} -noStats {self.path}temp/test.vcf', capture_output = True, shell = True).stdout.decode('ascii').strip().split('\n') 
         res = pd.read_csv(StringIO('\n'.join(a)),  comment='#',  sep ='\s+', 
                           header=None, names = temp.columns,  dtype=str).query('INFO != "skipping"')  
