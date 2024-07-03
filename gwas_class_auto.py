@@ -2466,8 +2466,7 @@ class gwas_pipe:
         '''
         printwithlog(f'generating locuszoom info for project {self.project_name}')
         status = st.status(f'Generating locuszoom info for project {self.project_name}', state='running')
-        # with container.container():
-        #     st.markdown(f':green[Generating locuszoom info for project {self.project_name}]')
+        
         if not len(qtltable) or type(qtltable) == str:
             qtltable = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{self.project_name}/results/qtls/finalqtl.csv')
         out = qtltable.reset_index()
@@ -2486,16 +2485,14 @@ class gwas_pipe:
         if not skip_ld_calculation:
             printwithlog(f'locuszoom: calculating r2 for nearby snps {self.project_name}')
             status.update(label=f'Calculating r2 for nearby SNPs...', state='running')
-            # with container.container():
-            #     st.markdown(f':green[Generating locuszoom info for project {self.project_name}]')
-            #     st.markdown(f':green[Calculating r2 for nearby snps...]')
+            
             progress = []
             for name, row in tqdm(list(out.iterrows())):
                 progress += '🐀'
                 status.update(label=f'Calculating r2 for nearby SNPs...{"".join(map(str, progress))}', state='running')
                 ldfilename = f'{self.path}results/lz/temp_qtl_n_@{row.trait}@{row.SNP}'
                 r2 = self.plink(bfile = self.genotypes_subset, chr = row.Chr, ld_snp = row.SNP, ld_window_r2 = 0.00001, r2 = 'dprime',\
-                                        ld_window = 100000, thread_num = int(self.threadnum), ld_window_kb =  7000, nonfounders = '').loc[:, ['SNP_B', 'R2', 'DP']] 
+                                        ld_window = 100000, thread_num = int(self.threadnum), ld_window_kb =  7000, nonfounders = '').loc[:, ['SNP_B', 'R2', 'DP']]
                 gwas = pd.concat([pd.read_csv(x, sep = '\t') for x in glob(f'{self.path}results/gwas/regressedlr_{row.trait}_chrgwas*.mlma')]).drop_duplicates(subset = 'SNP')
                 #glob(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/u01_olivier_george_cocaine/results/gwas/regressedlr_{row.trait}.loco.mlma') \   + 
                 #+ glob(f'{self.path}results/gwas/regressedlr_{row.trait}_chrgwas\d+.mlma')
@@ -3600,7 +3597,7 @@ class gwas_pipe:
         temp['##CHROM'] = 'chr'+ temp['##CHROM'].astype(str)
         vcf_manipulation.pandas2vcf(temp, f'{self.path}temp/test.vcf', metadata='')
         #a = bash(f'java -Xmx8g -jar {self.snpeff_path}snpEff.jar {d} -noStats {self.path}temp/test.vcf', print_call = False )# 'snpefftest',  -no-intergenic -no-intron
-        a = bash(f'$CONDA_PREFIX/share/snpeff-5.2-0/snpEff -Xmx8g {d} -noStats {self.path}temp/test.vcf', shell = True, silent = True, print_call = False )
+        a = bash(f'$CONDA_PREFIX/share/snpeff-5.2-0/snpEff -Xmx8g {d} -noStats {self.path}temp/test.vcf', shell = True, silent = False, print_call = True )
         #a = subprocess.run(f'$CONDA_PREFIX/share/snpeff-5.2-0/snpEff -Xmx8g {d} -noStats {self.path}temp/test.vcf', capture_output = True, shell = True).stdout.decode('ascii').strip().split('\n') 
         res = pd.read_csv(StringIO('\n'.join(a)),  comment='#',  sep ='\s+', 
                           header=None, names = temp.columns,  dtype=str).query('INFO != "skipping"')  
