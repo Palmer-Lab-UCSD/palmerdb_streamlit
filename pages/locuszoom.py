@@ -103,21 +103,39 @@ if is_logged_in:
                 url = f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/{file}'
                 with st.status("Initializing...") as status:
                     status.update(label="Downloading data...", state="running")
-                    if os.path.isfile(file):
-                        log_action(logger, f'{filename}: already have {url} unzipping')
-                        with ZipFile(f"{file}", 'r') as zObject:
-                            status.update(label="Unzipping data...", state='running')
-                            zObject.extractall() 
-                            status.update(label='Ready! Initializing object.', state='complete')
-                    else:
-                        filename = wget.download(url)
-                        log_action(logger, f'{filename}: downloading {url}')
-                        with ZipFile(f"{filename}", 'r') as zObject:
-                            status.update(label="Download complete.", state="complete")
-                            time.sleep(3)
-                            status.update(label="Unzipping data...", state='running')
-                            zObject.extractall()
-                            status.update(label="Ready! Initializing object.", state='complete')
+                    try:
+                        if os.path.isfile(file):
+                            log_action(logger, f'{filename}: already have {url} unzipping')
+                            with ZipFile(f"{file}", 'r') as zObject:
+                                status.update(label="Unzipping data...", state='running')
+                                zObject.extractall() 
+                                status.update(label='Ready! Initializing object.', state='complete')
+                        else:
+                            filename = wget.download(url)
+                            log_action(logger, f'{filename}: downloading {url}')
+                            with ZipFile(f"{filename}", 'r') as zObject:
+                                status.update(label="Download complete.", state="complete")
+                                time.sleep(3)
+                                status.update(label="Unzipping data...", state='running')
+                                zObject.extractall()
+                                status.update(label="Ready! Initializing object.", state='complete')
+                    except OSError as e:
+                        if 'space' in str(e):
+                            st.write('Clearing storage...')
+                            files = os.listdir('.')
+                            zip_files = [file for file in files if file.endswith('.zip')]
+                            for file in zip_files:
+                                os.remove(file)
+                            if os.path.exists('tscc') and os.path.isdir('tscc'):
+                                shutil.rmtree('tscc')
+                            if os.path.exists(project) and os.path.isdir(project):
+                                shutil.rmtree(project)
+                            st.cache_data.clear()
+                            st.rerun()
+                            
+                        else:
+                            # Handle other OS errors
+                            st.write(f"An unexpected OSError occurred: {e}")
                     
             else:
                 st.stop()
