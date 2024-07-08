@@ -55,6 +55,8 @@ def reset():
             os.remove(file)
         if os.path.exists('tscc') and os.path.isdir('tscc'):
             shutil.rmtree('tscc')
+        if os.path.exists('projects') and os.path.isdir('projects'):
+            shutil.rmtree('projects')
 
 st.header('GWAS Tools')
 st.write('''The following tools can be used to customize Phenotype Wide Association Study (PheWAS) tables and Regional Association Plots (Locuszoom) for your projects.
@@ -130,6 +132,8 @@ if is_logged_in:
                                 shutil.rmtree('tscc')
                             if os.path.exists(project) and os.path.isdir(project):
                                 shutil.rmtree(project)
+                            if os.path.exists('projects') and os.path.isdir('projects'):
+                                shutil.rmtree('projects')
                             st.cache_data.clear()
                             st.rerun()
                             
@@ -145,8 +149,14 @@ if is_logged_in:
             # edge
             if os.path.isdir(f'./tscc/projects/ps-palmer/gwas/projects/{project}/'):
                 path = f'./tscc/projects/ps-palmer/gwas/projects/{project}/'
+            elif os.path.isdir(f'./projects/ps-palmer/gwas/projects/{project}/'):
+                path = f'./projects/ps-palmer/gwas/projects/{project}/'
             else:
                 path = f'./{project}'
+            
+            if not os.path.isdir(path):
+                st.write('The files are currently not available, please select a different version and try again.')
+                
                 
             if len(path) > 0:
                 # init
