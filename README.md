@@ -23,15 +23,18 @@ Contains authentication and logging components, functions for MedPC extractor.
 This is cloned from the Palmer Lab GWAS pipeline repo. Contains relevant files for GWAS tools. The GWAS class in the pipeline repo is overwritten and replaced with ```gwas_class_auto.py``` from this repo.
 
 #### Other Files
+**In repository:**
 ```gwas.yml```: General Conda environment 
 
 ```lzenv.yml```: Conda environment specifically for locuszoom functionality
 
+```template.py```: Empty page template including standard imports and authentication setup.
+
+**Local Files:**
 ```founder_genotypes```: Directory of PLINK binary files (bed/bim/fam) for founders. *Must be saved locally*
 
 ```genotypes```: Directory of PLINK binary files (bed/bim/fam) for HS rats, latest version. *Must be saved locally. [Available with all public genotype releases.](https://irs.ratgenes.org/Genotyping%20Reports)*
 
-```template.py```: Empty page template including standard imports and authentication setup.
 
 ### To launch:
 The main method of running this app is through an AWS ECS Service  ```streamlit``` as a Fargate instance. The instance is created from a Docker image. To run the files locally, use the command:
