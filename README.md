@@ -24,6 +24,7 @@ This is cloned from the Palmer Lab GWAS pipeline repo. Contains relevant files f
 
 #### Other Files
 **In repository:**
+
 ```gwas.yml```: General Conda environment 
 
 ```lzenv.yml```: Conda environment specifically for locuszoom functionality
@@ -31,6 +32,7 @@ This is cloned from the Palmer Lab GWAS pipeline repo. Contains relevant files f
 ```template.py```: Empty page template including standard imports and authentication setup.
 
 **Local Files:**
+
 ```founder_genotypes```: Directory of PLINK binary files (bed/bim/fam) for founders. *Must be saved locally*
 
 ```genotypes```: Directory of PLINK binary files (bed/bim/fam) for HS rats, latest version. *Must be saved locally. [Available with all public genotype releases.](https://irs.ratgenes.org/Genotyping%20Reports)*
