@@ -54,7 +54,7 @@ def exp_name_alc(s):
     return None
 
 def exp_name_george(s):
-    pattern = re.compile(r'(PRESHOCK|SHOCK)(\w{1})|(PRESHOCK|SHOCK)|(LGA|SHA|SHOCK|TREATMENT|PR)(\w{2})')
+    pattern = re.compile(r'(PRESHOCK|SHOCK)(\w{2})|(PRESHOCK|SHOCK)|(LGA|SHA|SHOCK|TREATMENT|PR)(\w{2})')
     match = pattern.search(s)
     if match:
         if match.group(1):
