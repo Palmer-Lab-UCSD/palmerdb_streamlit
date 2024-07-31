@@ -74,7 +74,6 @@ if is_logged_in:
         else:
             # if they are not comma separated
             rfids =  ', '.join([f"'{v.strip()}'" for v in rfids.split() if v.strip()])
-        st.write(rfids)
 
 
     # # file uploader
