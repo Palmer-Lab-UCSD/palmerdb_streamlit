@@ -50,6 +50,11 @@ name = "GWAS Reports"
 icon = ""
 
 [[pages]]
+path = "pages/rfid_metadata.py"
+name = "Rat Metadata"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
