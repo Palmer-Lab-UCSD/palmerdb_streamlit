@@ -185,9 +185,10 @@ if is_logged_in and admin in username:
     with tab5:
         log_action(logger, f'{filename}: tab selected: genotyping log')
         st.header("Genotyping Logs")
-    
+        pipeline_ver = conn.query("select distinct pipeline_round from sample_tracking.genotyping_log_total\
+                                    order by pipeline_round")
         rounds = st.multiselect(label='select round', 
-                       options=['10.1', '10.2'], default=None, 
+                       options=pipeline_ver, default=None, 
                        placeholder="Choose a genotyping round", disabled=False, label_visibility="visible", key=5)
         round = ','.join([f"'{v}'" for v in rounds])
     
