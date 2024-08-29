@@ -28,8 +28,9 @@ if is_logged_in:
 
 
 # title
-st.image('https://ratgenes.org/wp-content/uploads/2014/11/GWAS_1200x150pxBanner-01.png')
-st.header("Palmer Lab Database 🐀", divider='green')
+st.image('./assets/irs.png')
+st.header("", divider='green')
+# st.header("Palmer Lab Database 🐀", divider='green')
 
 # body
 st.markdown(
@@ -44,8 +45,12 @@ st.markdown(
 
 with st.container(border=True):
     st.write('##### :green[Updates]')
-    updates = st.chat_message('Palmer Lab', avatar='chat.png')
+    updates = st.chat_message('Palmer Lab', avatar='./assets/chat.png')
     updates.write("Added tools: GWAS Report Archive, Locuszoom Generator, MedPC Extractor. Sign in to access!")
+    st.write('##### :green[Support]')
+    updates = st.chat_message('Palmer Lab', avatar='./assets/chat.png')
+    updates.write("For website support, please contact the Palmer Lab, or Elaine directly at ekeung@health.ucsd.edu.")
+    
 
 with st.sidebar:
     st.markdown('''
@@ -57,6 +62,12 @@ with st.sidebar:
     
     Palmer Lab IRS
     ''')
+    
+    st.image('./assets/GWAS_1200x150pxBanner-01.png')
+    st.image('https://palmerlab.org/wp-content/uploads/2019/09/palmerlab-logo.png')
+
+    
+
     
     
 
