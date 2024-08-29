@@ -116,11 +116,22 @@ if is_logged_in:
             temp = conn.query(query)
             proj = temp.project_name.unique().tolist()
             for project in proj:
-                query = f"""
-                        SELECT *, '{project}' as project_name
-                        FROM {project}.wfu_master
+                if 'hs_west' in project:
+                    query = f"""
+                        SELECT generation as cohort, sire as sires, dam as dames, 
+                        animalid as labanimalid, accessid, sex, rfid, dob, dow, 
+                        breederpair as litternumber, littersize, coatcolor, earpunch, 
+                        comments, COALESCE(project_name, 'hs_west_colony') as project_name
+                        FROM hs_west_colony.colony_master
                         WHERE rfid in ({rfid})
+                        and project_name = 'hs_west_colony'
                         """
+                else:
+                    query = f"""
+                            SELECT *, '{project}' as project_name
+                            FROM {project}.wfu_master
+                            WHERE rfid in ({rfid})
+                            """
                 queries.append(query)
             df = pd.DataFrame()
             for query in queries:
