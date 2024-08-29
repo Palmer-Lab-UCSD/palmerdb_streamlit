@@ -1,4 +1,5 @@
-# palmerdb_streamlit
+![alt text](https://github.com/Palmer-Lab-UCSD/palmerdb_streamlit/blob/main/assets/irs.png?raw=true)
+# 
 This repo is for the code used to create and maintain the Internet Rat Server (IRS) Streamlit application for viewing database summaries.
 
 ##### home.py 
@@ -48,3 +49,12 @@ streamlit run home.py
 Authentication is done through [AWS Cognito](https://aws.amazon.com/cognito/). The application is deployed with [AWS Elastic Container Service](https://aws.amazon.com/ecs/).
 
 This application was developed as a project for the [Palmer Lab](https://palmerlab.org) with [Streamlit](https://streamlit.io).
+
+### Related Resources
+[Palmer Lab Website](https://palmerlab.org/) 
+
+[ratgenes.org](https://ratgenes.org/)
+
+[RatGTEx](https://ratgtex.org/)
+
+The IRS logo is a derivative work from the logo for the Center for Genetics, Genomics, and Epigenetics of Substance Use Disorders in Outbred Rats. 
