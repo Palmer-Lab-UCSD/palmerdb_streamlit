@@ -174,5 +174,5 @@ with st.sidebar:
         st.write('##### :green[Support]')
         st.markdown("For website support, please contact the Palmer Lab, or Elaine directly at ekeung@health.ucsd.edu.")
     
-    st.image('./assets/GWAS_1200x150pxBanner-01.png')
+    st.image('./assets/Manhattan-Black-Roboto-font-4-alt-5.png')
     st.image('https://palmerlab.org/wp-content/uploads/2019/09/palmerlab-logo.png')
