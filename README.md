@@ -1,6 +1,6 @@
 ![alt text](https://github.com/Palmer-Lab-UCSD/palmerdb_streamlit/blob/main/assets/irs.png?raw=true)
 # 
-This repo is for the code used to create and maintain the Internet Rat Server (IRS) Streamlit application for viewing database summaries.
+This repository is for the code used to create and maintain the Internet Rat Server (IRS) Streamlit application, intended as a user-friendly view for information from the Palmer Lab's database.
 
 ##### home.py 
 This is the main page and the python file used to start the application.
