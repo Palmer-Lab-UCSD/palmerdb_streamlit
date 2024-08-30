@@ -18,7 +18,11 @@ RUN git clone https://github.com/Palmer-Lab-UCSD/palmerdb_streamlit.git
 
 
 # Copy all files from the current directory to the working directory
-COPY . /app/palmerdb_streamlit
+COPY auth.env /app/palmerdb_streamlit/.streamlit/
+COPY secrets.toml /app/palmerdb_streamlit/.streamlit/
+COPY founder_genotypes /app/palmerdb_streamlit/
+COPY genotypes /app/palmerdb_streamlit/
+COPY GWAS_pipeline /app/palmerdb_streamlit/
 RUN mv /app/palmerdb_streamlit/gwas_class_auto.py /app/palmerdb_streamlit/GWAS_pipeline
 # Set working directory to the cloned repository
 WORKDIR /app/palmerdb_streamlit
