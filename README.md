@@ -51,8 +51,6 @@ Authentication is done through [AWS Cognito](https://aws.amazon.com/cognito/). T
 This application was developed as a project for the [Palmer Lab](https://palmerlab.org) with [Streamlit](https://streamlit.io).
 
 ### Related Resources
-[Palmer Lab Website](https://palmerlab.org/) 
-
 [ratgenes.org](https://ratgenes.org/)
 
 [RatGTEx](https://ratgtex.org/)
