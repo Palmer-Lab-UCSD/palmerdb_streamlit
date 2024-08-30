@@ -27,16 +27,18 @@ if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
 
 
+# padding line
+st.write('######') 
 # title
 st.image('./assets/irs.png')
 st.header("", divider='green')
 # st.header("Palmer Lab Database 🐀", divider='green')
 
 # body
-st.markdown(
+st.write(
     """
     The Internet Rat Server (IRS) serves as a dashboard for the Palmer Lab database.
-
+    
     To access tools, please sign in with the given account using the form in the left sidebar.
     
     This app was developed as a project for the [Palmer Lab](https://palmerlab.org), and was created with [streamlit](https://streamlit.io).
@@ -61,7 +63,7 @@ with st.sidebar:
     ''')
     with st.container(border=True):
         st.write('##### :green[Support]')
-        st.markdown("For website support, please contact the Palmer Lab, or Elaine directly at ekeung@health.ucsd.edu.")
+        st.write("For website support, please contact the Palmer Lab, or Elaine directly at ekeung@health.ucsd.edu.")
     
     st.image('./assets/Manhattan-Black-Roboto-font-4-alt-5.png')
     st.image('https://palmerlab.org/wp-content/uploads/2019/09/palmerlab-logo.png')
