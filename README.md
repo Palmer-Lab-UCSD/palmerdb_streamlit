@@ -3,7 +3,7 @@
 This repository is for the code used to create and maintain the Internet Rat Server (IRS) Streamlit application, intended as a user-friendly view for information from the Palmer Lab's database.
 
 ### To launch:
-The main method of running this app is through an AWS ECS Service  ```streamlit``` as a Fargate instance, created from a Docker image stored in AWS ECR. To run the files locally, use the command:
+The main method of running this app is through an AWS ECS Service  ```streamlit``` as a Fargate instance, created from a Docker image stored in AWS ECR. To run the app locally, use the command:
 ```
 streamlit run home.py
 ```
