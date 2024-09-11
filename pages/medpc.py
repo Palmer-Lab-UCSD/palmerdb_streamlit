@@ -155,7 +155,7 @@ if 'df' in st.session_state:
             pivot_df = df.pivot_table(index='Subject', columns='name', values='value',
                                       aggfunc='first').reset_index()
             ordered_exp = [x for x in alcohol_exp if x in pivot_df.columns]
-            pivot_df.columns = ordered_exp
+            pivot_df = pivot_df.reindex(columns=ordered_exp)
             st.dataframe(pivot_df, hide_index = True)
             st.session_state['pivot'] = pivot_df
     
