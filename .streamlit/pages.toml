@@ -55,6 +55,11 @@ name = "Rat Metadata"
 icon = ""
 
 [[pages]]
+path = "pages/tables.py"
+name = "Database Records"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
@@ -63,4 +68,3 @@ icon = ""
 path = "pages/genotype.py"
 name = "Genotyping Reports"
 icon = ""
-
