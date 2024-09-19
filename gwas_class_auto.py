@@ -3597,7 +3597,7 @@ class gwas_pipe:
         temp['##CHROM'] = 'chr'+ temp['##CHROM'].astype(str)
         vcf_manipulation.pandas2vcf(temp, f'{self.path}temp/test.vcf', metadata='')
         #a = bash(f'java -Xmx8g -jar {self.snpeff_path}snpEff.jar {d} -noStats {self.path}temp/test.vcf', print_call = False )# 'snpefftest',  -no-intergenic -no-intron
-        conda_prefix = '/opt/conda/envs/gwas'
+        conda_prefix = sys.prefix
         snpeff_dir_pattern = os.path.join(conda_prefix, 'share', 'snpeff-*')
         snpeff_dirs = glob(snpeff_dir_pattern)
         snpeff_dir = snpeff_dirs[0] + '/snpEff'
