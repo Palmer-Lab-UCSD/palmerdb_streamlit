@@ -23,6 +23,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+conn = st.connection("palmerdb", type="sql", autocommit=False)
 logger = setup_logger()
 filename = os.path.basename(__file__)
 log_action(logger, f'{filename}: page entered')
@@ -53,15 +54,40 @@ data = 'https://www.dropbox.com/scl/fi/wrhelbhblbqp294epvbyg/gwas_reports.csv?rl
 if is_logged_in:
     df = pd.read_csv(data)
     
-    # filter projects by login username 
-    if admin not in username:
-        df = df.loc[df.project.str.contains(username.split('_')[0])]
-        log_action(logger, f'{filename}: filtered project {username}')
+    if is_logged_in and admin not in username:
+        # case: logged in, external account
+        prefix = username.split('_')[0]
+        perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
+    elif is_logged_in and admin in username:
+        # case: logged in, admin
+        perm = conn.query(f"""select distinct project_name as projects 
+                              from sample_tracking.project_metadata 
+                              order by project_name""")
+    else:
+        # case: not logged in
+        perm = None
 
-    b = st.selectbox(label='Select a project:', options=sorted(df.project.unique()), index=None, placeholder='Project name')
-    if b is not None:
-        log_action(logger, f'{filename}: selected project {b}')
-        df2 = df.loc[df.project == b]
+    if perm is not None and perm.projects[0] is not None:
+        # project list available
+        if admin not in username:
+            allow = perm.projects[0].split(', ')
+        else: 
+            allow = perm.projects.tolist()
+
+    # query projects
+    reports = df.project.unique()
+    allow = [x for x in allow if x in reports]
+    projects = sorted(allow)
+
+    # project picker
+    option = st.selectbox(label='Select project', 
+                       options=projects, index=None, 
+                       placeholder="Choose an option", disabled=False, label_visibility="visible")
+
+    # b = st.selectbox(label='Select a project:', options=sorted(df.project.unique()), index=None, placeholder='Project name')
+    if option is not None:
+        log_action(logger, f'{filename}: selected project {option}')
+        df2 = df.loc[df.project == option]
 
         a = list(zip(df2['samples'].tolist(), df2['date'].tolist()))
         a = sorted(a, key=lambda x: x[1], reverse=True)

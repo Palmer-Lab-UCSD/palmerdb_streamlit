@@ -74,7 +74,6 @@ elif is_logged_in and admin in username:
                           order by project_name""")
 else:
     # case: not logged in
-    st.write('Please sign in.')
     perm = None
     
 if perm is not None and perm.projects[0] is not None:

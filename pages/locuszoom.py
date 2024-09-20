@@ -26,7 +26,7 @@ st.set_page_config(
 )
 logger = setup_logger()
 filename = os.path.basename(__file__)
-
+conn = st.connection("palmerdb", type="sql", autocommit=False)
 log_action(logger, f'{filename}: page opened')
 
 authenticator, username, hidden, admin, is_logged_in= start_auth()
@@ -76,23 +76,44 @@ with st.expander('###### :green[Usage Notes and Tips]', expanded=True):
 - The program uses the rn7 gene list from NCBI RefSeq from NCBI GTF.
 - In case of errors or extremely poor performance, it is recommended to refresh the webpage to fully reset.''')
     
+files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
 
-if is_logged_in:
-    # prepare reading files
-    files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
+if is_logged_in and admin not in username:
+    # case: logged in, external account
+    prefix = username.split('_')[0]
+    perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
+    
+elif is_logged_in and admin in username:
+    # case: logged in, admin
+    perm = conn.query(f"""select distinct project_name as projects 
+                          from sample_tracking.project_metadata 
+                          order by project_name""")
+else:
+    # case: not logged in
+    perm = None
+    
+if perm is not None and perm.projects[0] is not None:
+    # project list available
     if admin not in username:
-        files_df = files_df.loc[files_df.project.str.contains(username.split('_')[0])]
-        log_action(logger, f'{filename}: filtered projects: {username}')
-    project_list = sorted(files_df.project.unique().tolist())    
+        allow = perm.projects[0].split(', ')
+    else: 
+        allow = perm.projects.tolist()
 
-    # input project and filter
-    project = st.selectbox(label='Projects', options=project_list, placeholder='Pick a project:', index=None, on_change=reset())
+    # query projects
+    reports = files_df.project.unique()
+    allow = [x for x in allow if x in reports]
+    projects = sorted(allow)
+
+    # project picker
+    project = st.selectbox(label='Select project', 
+                       options=projects, index=None, 
+                       placeholder="Choose an option", disabled=False, label_visibility="visible")
+
     if project is not None:
         log_action(logger, f'{filename}: selected project {project}')
         files_df = files_df.loc[files_df.project == project].sort_values(by='modified', ascending=False)
         filelist = files_df.file.str.split('/').str[-1].unique().tolist()
         filelist[0] = '[LATEST] ' + filelist[0]
-        
 
         # input file
         file = st.selectbox(label='Report Files:', options=filelist, placeholder='Pick a report file:', index=None, on_change=reset())
@@ -139,24 +160,36 @@ if is_logged_in:
                             
                         else:
                             # Handle other OS errors
-                            st.write(f"An unexpected OSError occurred: {e}")
-                    
+                            st.write(f"An unexpected OSError occurred: {e}") 
             else:
                 st.stop()
 
             df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
             
             # edge
-            if os.path.isdir(f'./tscc/projects/ps-palmer/gwas/projects/{project}/'):
-                path = f'./tscc/projects/ps-palmer/gwas/projects/{project}/'
-            elif os.path.isdir(f'./projects/ps-palmer/gwas/projects/{project}/'):
-                path = f'./projects/ps-palmer/gwas/projects/{project}/'
+            base = os.getcwd()
+            log_action(logger, f'base path: {base}')
+            target1 = os.path.join(base, 'tscc', 'projects', 'ps-palmer', 'gwas', 'projects', project)
+            target2 = os.path.join(base, 'projects', 'ps-palmer', 'gwas', 'projects', project)
+            target3 = os.path.join(base, project)
+            log_action(logger, f'tscc: {os.path.isdir(target1)}')
+            log_action(logger, f'project: {os.path.isdir(target2)}')
+            log_action(logger, f'root: {os.path.isdir(target3)}')
+
+            if os.path.isdir(target1):
+                path = target1 + '/'
+            elif os.path.isdir(target2):
+                path = target2 + '/'
             else:
-                path = f'./{project}'
+                path = target3 + '/'
             
+            log_action(logger, f'final path: {path}')
+
             if not os.path.isdir(path):
                 st.write('The files are currently not available, please select a different version and try again.')
-                
+            
+            geno_path =  os.path.join(base,'genotypes') + '/genotypes'
+            founder_path =  os.path.join(base,'founder_genotypes') + '/founder7.2'
                 
             if len(path) > 0:
                 # init
@@ -165,17 +198,16 @@ if is_logged_in:
                              data = df,
                              project_name = f'{project}',
                              n_autosome =20,
-                             all_genotypes =  path + '/genotypes/genotypes',
+                             all_genotypes =  geno_path,
                              traits = [], 
                              threshold=5.36,
-                             founderfile = 'founder_genotypes/founders7.2',
+                             founderfile = founder_path,
                              locuszoom_path='GWAS_pipeline/locuszoom/',
                              phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
                              threads = 6,
                              gtf = f'https://www.dropbox.com/scl/fi/ai1fw6fxsazns0pt40yec/rn_7_gtf.csv?rlkey=ovyi0mdaz71oci9mhtxchhvxw&dl=1')
                 self = gwas
                 st.session_state['gwas'] = self
-
 
         if 'gwas' in st.session_state:
             self = st.session_state['gwas']
