@@ -51,18 +51,45 @@ st.markdown("""This page will return the Palmer Lab's metadata records for rats 
 
 To use, paste a list of RFIDs in the text box. RFIDs can be separated by newlines, commas, or spaces, but should not include quotes or any other character.""")
 
-if is_logged_in:
-    log_action(logger, f'{filename}: authentication status: true, user name: {username}')
-    # query projects
-    projects = conn.query("select distinct project_name from sample_tracking.sample_metadata order by project_name")
-    projects = sorted(projects.project_name.tolist())
+# if is_logged_in:
+#     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
+#     # query projects
+#     projects = conn.query("select distinct project_name from sample_tracking.sample_metadata order by project_name")
+#     projects = sorted(projects.project_name.tolist())
 
-    if admin in username:
-        # should only be available to palmer
-        option = st.selectbox(label='Select project', 
-                           options=projects, index=None, 
-                           placeholder="Choose an option", disabled=False, label_visibility="visible")
-    else: option = None
+#     if admin in username:
+#         # should only be available to palmer
+#         option = st.selectbox(label='Select project', 
+#                            options=projects, index=None, 
+#                            placeholder="Choose an option", disabled=False, label_visibility="visible")
+#     else: option = None
+if is_logged_in and admin not in username:
+    # case: logged in, external account
+    prefix = username.split('_')[0]
+    perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
+elif is_logged_in and admin in username:
+    # case: logged in, admin
+    perm = conn.query(f"""select distinct project_name as projects 
+                          from sample_tracking.project_metadata 
+                          order by project_name""")
+else:
+    # case: not logged in
+    perm = None
+    
+if perm is not None and perm.projects[0] is not None:
+    # project list available
+    if admin not in username:
+        allow = perm.projects[0].split(', ')
+    else: 
+        allow = perm.projects.tolist()
+
+    # query projects
+    projects = sorted(allow)
+
+    # project picker
+    option = st.selectbox(label='Select project', 
+                       options=projects, index=None, 
+                       placeholder="Choose an option", disabled=False, label_visibility="visible")
 
     # start processing rfids
     rfids = ''

@@ -2460,7 +2460,8 @@ class gwas_pipe:
             plt.close()   
     
     def locuszoom(self, qtltable: pd.DataFrame() = '',  qtl_r2_thresh: float = .65, save = True,
-                  padding: float = 1e5, skip_ld_calculation = False, make_interactive = True, make_classic = True, print_call = False):
+                  padding: float = 1e5, skip_ld_calculation = False, make_interactive = True,
+                  make_classic = True, print_call = False):
         '''
         Only works on TSCC
         '''
@@ -2532,6 +2533,11 @@ class gwas_pipe:
             ## change to new rewritten file
             path = f'{self.path}results/lz/lzplottable_{qtl_row.trait}_{qtl_row.SNP}.tsv'
             printwithlog(f'file path {path}...')
+            if os.path.exists(path):
+                printwithlog("File exists")
+            else:
+                printwithlog("File does not exist")
+
             status.update(label=f'Running original locuszoom...🐀', state='running')
             topsnpchr, topsnpbp = qtl_row.SNP.split(':')
             topsnpchr = self.replaceXYMTtonums(topsnpchr)
@@ -2558,28 +2564,60 @@ class gwas_pipe:
                 
                 for filest in glob(f'{self.path}temp/{qtl_row.trait}*{qtl_row.SNP}'): os.system(f'rm -r {filest}')
 
-                os.system(f'''conda run -n lzenv \
-                    ./GWAS_pipeline/locuszoom/bin/locuszoom \
+                env = os.environ.copy()
+                env["PATH"] = f'/venv/lzenv/bin:{env["PATH"]}'
+                base = os.getcwd()
+                lz_path = os.path.join(base, 'GWAS_pipeline', 'locuszoom', 'bin')
+                printwithlog(f'locuszoom path: {lz_path}')
+
+                #source /venv/lzenv/bin/activate \
+
+                first_lz = subprocess.run(f'''{lz_path}/locuszoom \
                     --metal {lzpvalname} --ld {lzr2name} \
-                    --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - padding)} --end {int(range_interest["max"] + padding)} --build manual \
+                    --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - padding)} \
+                    --end {int(range_interest["max"] + padding)} --build manual \
                     --db ./GWAS_pipeline/databases/{genome_lz_path}.db \
-                    --plotonly showRecomb=FALSE showAnnot=FALSE --prefix {self.path}temp/{qtl_row.trait} signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
-                    title = "{qtl_row.trait} SNP {qtl_row.SNP}" \
-                    prelude="./GWAS_pipeline/locuszoom/bin/locuszoom/prelude.R" >/dev/null 2>&1''') #module load R && module load python && > /dev/null 2>&1 
+                    --plotonly showRecomb=FALSE showAnnot=FALSE --prefix {self.path}temp/{qtl_row.trait} \
+                    signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
+                    title = "{qtl_row.trait} SNP {qtl_row.SNP}" ''', 
+                    shell=True, capture_output=True, text=True,  executable='/bin/bash', env=env)
+                    
+                printwithlog(f"1 stdout: {first_lz.stdout}")
+                printwithlog(f"1 stderr: {first_lz.stderr}")
                 os.makedirs(f'{self.path}images/lz/6Mb/', exist_ok = True)
+
+                if os.path.isdir(f'{self.path}images'):
+                    printwithlog("access for image dir")
+                else:
+                    printwithlog("cannot make img directory")
+                
                 status.update(label=f'Running original locuszoom...🐀🐀', state='running')
                 
-                lz12mbCall = f'''conda run -n lzenv ./GWAS_pipeline/locuszoom/bin/locuszoom\
+                lz12mbCall = f'''{lz_path}/locuszoom \
                     --metal {lzpvalname} --ld {lzr2name} \
-                    --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - int(3e6))} --end {int(range_interest["max"] + int(3e6))} --build manual \
+                    --refsnp {qtl_row.SNP} --chr {int(topsnpchr)} --start {int(range_interest["min"] - int(3e6))} \
+                    --end {int(range_interest["max"] + int(3e6))} --build manual \
                     --db ./GWAS_pipeline/databases/{genome_lz_path}.db \
-                    --plotonly showRecomb=FALSE showAnnot=FALSE --prefix {self.path}images/lz/6Mb/lz__{qtl_row.trait}_6Mb signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
-                    title = "{qtl_row.trait} SNP {qtl_row.SNP} 6Mb" \
-                    prelude="./GWAS_pipeline/locuszoom/bin/locuszoom/prelude.R" >/dev/null 2>&1'''
-                os.system(lz12mbCall) #module load R && module load python && {self.locuszoom_path}bin/locuszoom 
+                    --plotonly showRecomb=FALSE showAnnot=FALSE \
+                    --prefix {self.path}images/lz/6Mb/lz__{qtl_row.trait}_6Mb \
+                    signifLine="{self.threshold},{self.threshold05}" signifLineColor="red,blue" \
+                    title = "{qtl_row.trait} SNP {qtl_row.SNP} 6Mb"  '''
+                sec_lz = subprocess.run(lz12mbCall, shell=True, capture_output=True, 
+                                        text=True, executable='/bin/bash', env=env)
+                printwithlog(f"2 stdout: {sec_lz.stdout}")
+                printwithlog(f"2 stderr: {sec_lz.stderr}")
+                
                 status.update(label=f'Running original locuszoom...🐀🐀🐀', state='running')
                 if print_call: print(lz12mbCall)
                 today_str = datetime.today().strftime('%y%m%d')
+
+                if os.path.exists(f'{self.path}temp/'):
+                    printwithlog("access for locuszoom ok")
+                    printwithlog(glob(f'{self.path}temp/**/*', recursive=True))
+                    printwithlog(glob(f'{self.path}images/lz/6Mb/**/*', recursive=True))
+                else:
+                    printwithlog("cannot make directory")
+
                 path = glob(f'{self.path}temp/{qtl_row.trait}*{qtl_row.SNP}/*.pdf'.replace(':', '_')) + \
                        glob(f'{self.path}temp/{qtl_row.trait}_{today_str}_{qtl_row.SNP}*.pdf'.replace(':', '_'))
                 if not len(path): printwithlog(f'could not find any pdf with {self.path}temp/{qtl_row.trait}*{qtl_row.SNP}/*.pdf')
@@ -3597,7 +3635,7 @@ class gwas_pipe:
         temp['##CHROM'] = 'chr'+ temp['##CHROM'].astype(str)
         vcf_manipulation.pandas2vcf(temp, f'{self.path}temp/test.vcf', metadata='')
         #a = bash(f'java -Xmx8g -jar {self.snpeff_path}snpEff.jar {d} -noStats {self.path}temp/test.vcf', print_call = False )# 'snpefftest',  -no-intergenic -no-intron
-        conda_prefix = '/opt/conda/envs/gwas'
+        conda_prefix = sys.prefix
         snpeff_dir_pattern = os.path.join(conda_prefix, 'share', 'snpeff-*')
         snpeff_dirs = glob(snpeff_dir_pattern)
         snpeff_dir = snpeff_dirs[0] + '/snpEff'
