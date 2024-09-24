@@ -125,21 +125,21 @@ if perm is not None and perm.projects[0] is not None:
             if file is not None and project is not None:
                 url = f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/{file}'
                 with st.status("Initializing...") as status:
-                    status.update(label="Downloading data...", state="running")
+                    status.update(label="Preparing data...", state="running")
                     try:
                         if os.path.isfile(file):
                             log_action(logger, f'{filename}: already have {url} unzipping')
                             with ZipFile(f"{file}", 'r') as zObject:
-                                status.update(label="Unzipping data...", state='running')
+                                status.update(label="Loading data...", state='running')
                                 zObject.extractall() 
                                 status.update(label='Ready! Initializing object.', state='complete')
                         else:
                             filename = wget.download(url)
-                            log_action(logger, f'{filename}: downloading {url}')
+                            log_action(logger, f'{filename}: getting {url}')
                             with ZipFile(f"{filename}", 'r') as zObject:
-                                status.update(label="Download complete.", state="complete")
+                                status.update(label="Data preparation complete.", state="complete")
                                 time.sleep(3)
-                                status.update(label="Unzipping data...", state='running')
+                                status.update(label="Loading data...", state='running')
                                 zObject.extractall()
                                 status.update(label="Ready! Initializing object.", state='complete')
                     except OSError as e:

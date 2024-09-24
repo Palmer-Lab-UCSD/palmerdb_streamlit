@@ -2628,7 +2628,7 @@ class gwas_pipe:
                         bn = basename(path).replace('.pdf', '.png')
                         if not num: 
                             image.save(f'{self.path}images/lz/lz__{qtl_row.trait}__{qtl_row.SNP}.png'.replace(':', '_'), 'png')
-                            status.update(label='Saving results!', state='complete')
+                            status.update(label='Storing results!', state='complete')
 
         for impath in glob(f'{self.path}images/lz/6Mb/*.pdf'):
             impathout = re.sub('6Mb_\d+_', '6Mb__', impath).replace('.pdf', '.png')
@@ -2916,7 +2916,7 @@ class gwas_pipe:
         
         if not len(qtltable): 
             printwithlog(f'reading file from {self.path}results/qtls/finalqtl.csv...') 
-            status.update(label=f'Reading file...', state='running')
+            status.update(label=f'Loading file...', state='running')
             qtltable = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{self.project_name}/results/qtls/finalqtl.csv').set_index('SNP').loc[:, : 'significance_level']
         #if not len(qtltable): qtltable = pd.read_csv(self.annotatedtablepath).set_index('SNP').loc[:, : 'significance_level']
         db_vals = pd.read_parquet(phewas_file).query(f'p < {pval_threshold}')  #, compression='gzip'   and project != "{self.project_name}   
