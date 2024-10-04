@@ -194,7 +194,10 @@ if is_logged_in and admin in username:
     
         query = build_query('genotyping_log_total', projects, rfids)
         if round:
-            query += f' where pipeline_round in ({round})'
+            if "WHERE" in query.upper():
+                query += f' and pipeline_round in ({round})'
+            else:
+                query += f' where pipeline_round in ({round})'
         st.code(query) # remove later
         fullquery = 'rollback; begin transaction; ' + query
         df = conn.query(fullquery)
