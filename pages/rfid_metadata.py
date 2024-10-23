@@ -170,6 +170,7 @@ if perm is not None and perm.projects[0] is not None:
     if option is not None or len(rfids) >= 1:
         df = build_query(option, rfids)
         st.dataframe(df)
+        st.write(df.shape[0], ' samples')
 
         # download
         csv = convert_df(df) 
