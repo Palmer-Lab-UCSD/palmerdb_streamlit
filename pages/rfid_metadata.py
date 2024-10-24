@@ -127,6 +127,7 @@ if perm is not None and perm.projects[0] is not None:
         '''
 
         if project:
+            if project == 'pilot_fransesca_telese_twas': project = 'p50_hao_chen_2014'
             query = f'SELECT * FROM {project}.wfu_master '
         else:
             query = f"SELECT project_name FROM sample_tracking.sample_metadata "
@@ -142,6 +143,9 @@ if perm is not None and perm.projects[0] is not None:
             queries = []
             temp = conn.query(query)
             proj = temp.project_name.unique().tolist()
+            proj = [x.replace('pilot_fransesca_telese_twas', 'p50_hao_chen_2014') \
+                    if x == 'pilot_fransesca_telese_twas' else x for x in proj]
+
             for project in proj:
                 if 'hs_west' in project:
                     query = f"""
