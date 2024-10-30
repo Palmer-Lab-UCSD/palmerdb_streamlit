@@ -37,7 +37,6 @@ COPY --from=builder /venv /venv
 # dependencies
 RUN apt-get update && apt-get install -y \
     curl \
-    git \
     default-jre \
     && rm -rf /var/lib/apt/lists/*
 
@@ -46,11 +45,6 @@ ENV PATH=/venv/gwas/bin:${PATH}
 
 # set directory
 WORKDIR /app 
-
-# get pipeline
-RUN git clone https://github.com/sanchestm/GWAS-pipeline.git ./GWAS_pipeline && \
-    rm -rf /app/GWAS_pipeline/example && \
-    rm -rf /app/GWAS_pipeline/test
 
 # Copy all files from the current directory to the working directory
 COPY . . 
