@@ -104,6 +104,10 @@ if perm is not None and perm.projects[0] is not None:
     table_map = {
         'gwas_phenotypes':'behavioral phenotypes',
         'gwas_phenotypes_current':'behavioral phenotypes',
+        'locomotor_phenotypes':'locomotor phenotypes',
+        'runway_phenotypes':'runway phenotypes',
+        'progressiveratio_phenotypes':'progressive ratio phenotypes',
+        'progressivepunishment_phenotypes':'progressive punishment phenotypes',
         'behavioral':'behavioral phenotypes',
         'nicsa':'nicsa phenotypes',
         'raw_phenotypes':'raw data',
@@ -117,7 +121,7 @@ if perm is not None and perm.projects[0] is not None:
         'descriptions':'trait descriptions'
     }
     
-    
+    # hs_west different 
     if option != 'hs_west_colony':
         display_tables = tables.table_name.map(table_map).tolist()
     else:
@@ -138,6 +142,7 @@ if perm is not None and perm.projects[0] is not None:
     if option and table:
         df = build_query(option, table)
         st.dataframe(df)
+        st.write(df.shape[0], ' samples;', df.shape[1], ' columns')
 
         # download
         csv = convert_df(df) 
