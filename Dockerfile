@@ -58,8 +58,5 @@ COPY rn7.db ./GWAS_pipeline/databases/
 # Expose the port number that Streamlit listens on
 EXPOSE 8501
 
-# Healthcheck to ensure the service is running
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
-
 # Run app.py when the container launches using conda run to ensure the environment is activated
 ENTRYPOINT ["/venv/gwas/bin/python", "-m", "streamlit", "run", "home.py", "--server.port=8501"]
