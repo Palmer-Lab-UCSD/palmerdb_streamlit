@@ -163,7 +163,8 @@ if perm is not None and perm.projects[0] is not None:
                             st.write(f"An unexpected OSError occurred: {e}") 
             else:
                 st.stop()
-
+            if 'alcohol' in project: project = 'r01_deguglielmo_etoh'
+            
             df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
             
             # edge
