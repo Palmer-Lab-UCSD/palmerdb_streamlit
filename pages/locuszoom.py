@@ -101,15 +101,24 @@ if perm is not None and perm.projects[0] is not None:
 
     # query projects
     reports = files_df.project.unique()
-    allow = [x for x in allow if x in reports]
+    allow = [x for x in allow if x in reports or 'hao_chen' in x]
     projects = sorted(allow)
-
+    
     # project picker
     project = st.selectbox(label='Select project', 
                        options=projects, index=None, 
                        placeholder="Choose an option", disabled=False, label_visibility="visible")
 
+
     if project is not None:
+        # edge cases
+        if 'hao_chen' in project:
+            project = st.selectbox(label='Select project', 
+                       options=['p50_hao_chen_2020','p50_hao_chen_novel', 'p50_hao_chen_social'], 
+                       placeholder="Choose an option", disabled=False, label_visibility="visible")
+        elif 'alcohol' in project: project = 'r01_deguglielmo_etoh'
+        
+        # add latest tag
         log_action(logger, f'{filename}: selected project {project}')
         files_df = files_df.loc[files_df.project == project].sort_values(by='modified', ascending=False)
         filelist = files_df.file.str.split('/').str[-1].unique().tolist()
@@ -121,19 +130,23 @@ if perm is not None and perm.projects[0] is not None:
             log_action(logger, f'{filename}: selected file {file}')
             file = file[9:]
 
+        # begin init
         if 'gwas' not in st.session_state:
             if file is not None and project is not None:
+                # get data
                 url = f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/{file}'
                 with st.status("Initializing...") as status:
                     status.update(label="Preparing data...", state="running")
                     try:
                         if os.path.isfile(file):
+                            # if already have zip
                             log_action(logger, f'{filename}: already have {url} unzipping')
                             with ZipFile(f"{file}", 'r') as zObject:
                                 status.update(label="Loading data...", state='running')
                                 zObject.extractall() 
                                 status.update(label='Ready! Initializing object.', state='complete')
                         else:
+                            # if do not have zip
                             filename = wget.download(url)
                             log_action(logger, f'{filename}: getting {url}')
                             with ZipFile(f"{filename}", 'r') as zObject:
@@ -142,6 +155,10 @@ if perm is not None and perm.projects[0] is not None:
                                 status.update(label="Loading data...", state='running')
                                 zObject.extractall()
                                 status.update(label="Ready! Initializing object.", state='complete')
+                                
+                    # volume space issues
+                    # dir structure from extract includes /tscc, /project commonly
+                    # also remove all zip files
                     except OSError as e:
                         if 'space' in str(e):
                             st.write('Clearing storage...')
@@ -159,15 +176,16 @@ if perm is not None and perm.projects[0] is not None:
                             st.rerun()
                             
                         else:
-                            # Handle other OS errors
+                            # Handle other OS errors and show me
                             st.write(f"An unexpected OSError occurred: {e}") 
             else:
                 st.stop()
-            if 'alcohol' in project: project = 'r01_deguglielmo_etoh'
             
+            # prepare data
             df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
             
             # edge
+            # finding where the extracted files are
             base = os.getcwd()
             log_action(logger, f'base path: {base}')
             target1 = os.path.join(base, 'tscc', 'projects', 'ps-palmer', 'gwas', 'projects', project)
@@ -187,8 +205,11 @@ if perm is not None and perm.projects[0] is not None:
             log_action(logger, f'final path: {path}')
 
             if not os.path.isdir(path):
+                # 
                 st.write('The files are currently not available, please select a different version and try again.')
+                st.stop()
             
+            # getting genotype path
             geno_path =  os.path.join(base,'genotypes') + '/genotypes'
             founder_path =  os.path.join(base,'founder_genotypes') + '/founder7.2'
                 
@@ -211,6 +232,7 @@ if perm is not None and perm.projects[0] is not None:
                 st.session_state['gwas'] = self
 
         if 'gwas' in st.session_state:
+            # if changed option but don't want to init object again
             self = st.session_state['gwas']
             st.write('##### Phenotype Wide Association Study (PheWAS): ')
             phewas(self)
