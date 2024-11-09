@@ -125,9 +125,7 @@ if perm is not None and perm.projects[0] is not None:
     if option != 'hs_west_colony':
         display_tables = tables.table_name.map(table_map).tolist()
     else:
-        display_tables = tables.table_name.tolist()
-        
-    st.write(display_tables)
+        display_tables = tables.table_name.tolist()   
 
     # select table
     select_table = st.selectbox(label='Select data', 
@@ -139,9 +137,6 @@ if perm is not None and perm.projects[0] is not None:
         table = [key for key, value in table_map.items() if value == select_table][0]
     else: table = None
     
-    st.write(table)
-
-
     # run query
     if option and table:
         df = build_query(option, table)
