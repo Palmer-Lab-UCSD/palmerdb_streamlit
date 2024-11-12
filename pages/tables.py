@@ -84,7 +84,7 @@ if perm is not None and perm.projects[0] is not None:
         allow = perm.projects.tolist()
 
     # query projects
-    projects = sorted(allow)
+    projects = sorted([x for x in allow if 'hs_west_colony' not in x])
 
     # project picker
     option = st.selectbox(label='Select project', 
@@ -102,30 +102,27 @@ if perm is not None and perm.projects[0] is not None:
 
     # legible names
     table_map = {
-        'gwas_phenotypes':'behavioral phenotypes',
+        'behavioral':'behavioral phenotypes',
+        'nicsa':'nicsa phenotypes',
+        'raw_phenotypes':'raw data',
         'gwas_phenotypes_current':'behavioral phenotypes',
+        'gwas_phenotypes':'behavioral phenotypes',
         'locomotor_phenotypes':'locomotor phenotypes',
         'runway_phenotypes':'runway phenotypes',
         'progressiveratio_phenotypes':'progressive ratio phenotypes',
         'progressivepunishment_phenotypes':'progressive punishment phenotypes',
-        'behavioral':'behavioral phenotypes',
-        'nicsa':'nicsa phenotypes',
-        'raw_phenotypes':'raw data',
-        'physio_phenotypes':'physiological phenotypes',
         'dissection':'physiological phenotypes',
-        'wfu_master':'sample metadata',
+        'physio_phenotypes':'physiological phenotypes',
         'wfu_master_corrected':'sample metadata',
+        'wfu_master':'sample metadata',
         'ucsf_master':'sample metadata',
         'ucsd_master':'sample metadata',
         'colony_master':'colony metadata',
         'descriptions':'trait descriptions'
     }
+    tm = {k: v for k, v in table_map.items() if k in tables['table_name'].values}
     
-    # hs_west different 
-    if option != 'hs_west_colony':
-        display_tables = tables.table_name.map(table_map).tolist()
-    else:
-        display_tables = tables.table_name.tolist()
+    display_tables = tables.table_name.map(tm).tolist()
 
     # select table
     select_table = st.selectbox(label='Select data', 
@@ -134,10 +131,9 @@ if perm is not None and perm.projects[0] is not None:
 
     # re-map names
     if select_table:
-        table = [key for key, value in table_map.items() if value == select_table][0]
+        table = [key for key, value in tm.items() if value == select_table][0]
     else: table = None
-
-
+    
     # run query
     if option and table:
         df = build_query(option, table)

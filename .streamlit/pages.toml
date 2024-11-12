@@ -30,6 +30,11 @@ name = "Genotyping Metadata"
 icon = ""
 
 [[pages]]
+path = "pages/rattaca.py"
+name = "HS West Records"
+icon = "" 
+
+[[pages]]
 name = "Tools"
 is_section = true
 icon = ""
