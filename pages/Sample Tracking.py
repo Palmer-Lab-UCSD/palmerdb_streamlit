@@ -113,7 +113,7 @@ if is_logged_in and admin not in username:
 
 if is_logged_in and admin in username:
 
-    st.title('Palmer Lab Database Samples')
+    st.title('Palmer Lab Sample Tracking')
     
     # db connection
     # conn = st.connection("palmerdb", type="sql", autocommit=False)
@@ -257,6 +257,12 @@ if is_logged_in and admin in username:
                        options=pipeline_ver, default=None, 
                        placeholder="Choose a genotyping round", disabled=False, label_visibility="visible", key=5)
         round_sql = ','.join([f"'{v}'" for v in pipe_round])
+        
+        if "'p50_hao_chen'" in projects_sql:
+            projects_sql = projects_sql.replace("'p50_hao_chen'", "'p50_hao_chen_2020', 'p50_hao_chen_2014'")
+            projects = [item if item != 'p50_hao_chen' else 'p50_hao_chen_2020' for item in projects]
+            projects.insert(projects.index('p50_hao_chen_2020') + 1, 'p50_hao_chen_2014')
+
     
         query = build_query('genotyping_log_total', projects_sql, rfids_sql)
         if pipe_round:
@@ -289,7 +295,6 @@ if is_logged_in and admin in username:
         st.header("Genotyping Drops")
     
         query = build_query('genotyping_drops', projects_sql, rfids_sql)
-        
         st.code(query) # remove later
         # fullquery = 'rollback; begin transaction; ' + query
         # df = conn.query(fullquery)
