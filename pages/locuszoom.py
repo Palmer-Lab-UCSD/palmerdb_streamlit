@@ -76,7 +76,8 @@ with st.expander('###### :green[Usage Notes and Tips]', expanded=True):
 - The program uses the rn7 gene list from NCBI RefSeq from NCBI GTF.
 - In case of errors or extremely poor performance, it is recommended to refresh the webpage to fully reset.''')
     
-files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
+# files_df = pd.read_csv('https://www.dropbox.com/scl/fi/k24hv7jclwxkz6qjf4pdh/gwas_files.csv?rlkey=yb7k00dzli0874dc64fplgt6w&dl=1')
+files_df = conn.query(f"""select * from sample_tracking.gwas_files""")
 
 if is_logged_in and admin not in username:
     # case: logged in, external account

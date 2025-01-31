@@ -96,7 +96,7 @@ if is_logged_in and admin in username:
         log_action(logger, f'trait searched: {trait}')
         
         if trait is not None:
-            data = data.loc[data.measure.str.contains(trait)]
+            data = data.loc[data.measure.str.contains(trait, na=False)]
             st.dataframe(data)
             st.write('Total traits: ', len(data))
 
