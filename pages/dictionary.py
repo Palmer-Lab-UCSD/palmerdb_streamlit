@@ -95,16 +95,17 @@ if is_logged_in and admin in username:
         trait = st.text_input('Find a trait:', placeholder = 'Enter characters in trait name (e.g. "loco")...')
         log_action(logger, f'trait searched: {trait}')
         
-        data = data.loc[data.measure.str.contains(trait)]
-        st.dataframe(data)
-        st.write('Total traits: ', len(data))
-    
-        st.download_button(
-            label="Download data dictionary as CSV",
-            data=convert_df(data),
-            file_name=f'n{len(data)}_traits_dictionary_{time.strftime("%Y%m%d")}.csv',
-            mime='text/csv',
-        )
+        if trait is not None:
+            data = data.loc[data.measure.str.contains(trait, na=False)]
+            st.dataframe(data)
+            st.write('Total traits: ', len(data))
+
+            st.download_button(
+                label="Download data dictionary as CSV",
+                data=convert_df(data),
+                file_name=f'n{len(data)}_traits_dictionary_{time.strftime("%Y%m%d")}.csv',
+                mime='text/csv',
+            )
         
 with st.sidebar:
     st.markdown('''

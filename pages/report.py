@@ -52,7 +52,8 @@ st.write('Please sign in to access an archive of GWAS reports for your projects.
 data = 'https://www.dropbox.com/scl/fi/wrhelbhblbqp294epvbyg/gwas_reports.csv?rlkey=byxwurl53dvdenkywv8r4rvpe&dl=1'
 
 if is_logged_in:
-    df = pd.read_csv(data)
+    # df = pd.read_csv(data)
+    df = conn.query(f"""select * from sample_tracking.gwas_reports""")
     
     if is_logged_in and admin not in username:
         # case: logged in, external account
