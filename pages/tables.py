@@ -82,6 +82,12 @@ if perm is not None and perm.projects[0] is not None:
         allow = perm.projects[0].split(', ')
     else: 
         allow = perm.projects.tolist()
+        
+    st.write('''Use the dropdowns to select the table you'd like to retrieve. 
+
+The table is interactive:
+- Click on a column to sort the table by that column.
+- Hover in the top right of the table to find a search option or to enter fullscreen.''')
 
     # query projects
     projects = sorted([x for x in allow if 'hs_west_colony' not in x])
