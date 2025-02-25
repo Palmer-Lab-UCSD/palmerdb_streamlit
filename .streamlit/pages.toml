@@ -65,6 +65,11 @@ name = "Database Records"
 icon = ""
 
 [[pages]]
+path = "pages/allcorrelation.py"
+name = "Trait Correlations"
+icon = ""
+
+[[pages]]
 name = "Public"
 is_section = true
 icon = ""
@@ -73,3 +78,4 @@ icon = ""
 path = "pages/genotype.py"
 name = "Genotyping Reports"
 icon = ""
+

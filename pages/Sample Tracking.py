@@ -143,11 +143,11 @@ if is_logged_in and admin in username:
     log_action(logger, f'{filename}: pool list acquired')
 
     # project selector, rfid filter
-    projects = st.multiselect(label='select project', 
+    projects = st.multiselect(label='Select project', 
                        options=project, default=None, 
                        placeholder="Choose projects", disabled=False, label_visibility="visible", key=1) # returns list
     projects_sql = ','.join([f"'{project}'" for project in projects])
-    rfids = st.text_input('find rfids', key=2) # returns string
+    rfids = st.text_input('Find RFIDs', key=2) # returns string
     rfids_sql =  ', '.join([f"'{v.strip()}'" for v in rfids.split(',') if v.strip()])
     
     # tabs

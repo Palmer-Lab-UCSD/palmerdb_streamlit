@@ -39,16 +39,38 @@ st.write(
     """
     The Internet Rat Server (IRS) serves as a dashboard for the Palmer Lab database.
     
-    To access tools, please sign in with the given account using the form in the left sidebar.
+    To access tools, please sign in with the given account using the form in the left sidebar.  
+    View a list of available tools below.
     
     This app was developed as a project for the [Palmer Lab](https://palmerlab.org), and was created with [streamlit](https://streamlit.io).
 """
 )
 
 with st.container(border=True):
-    st.write('##### :green[Updates]')
-    updates = st.chat_message('Palmer Lab', avatar='./assets/chat.png')
-    updates.write("Added tools: GWAS Report Archive, Locuszoom Generator, MedPC Extractor. Sign in to access!")
+    st.write('##### :green-background[Navigation]')
+    navi = st.chat_message('Palmer Lab', avatar='./assets/chat.png')
+    navi.write("Login to see a list of tools available to you!")
+    if is_logged_in:
+        if admin in username: 
+            navi.write('''**:green[Palmer Lab Tools:]**  
+                            Database Summary: View animal counts throughout the progress of a project.  
+                            Sample Tracking: Check the progress of animals and projects through the genotyping process.  
+                            Data Dictionary: View the data dictionary of a project used for GWAS.  
+                            Genotyping Metadata: Retrieve the metadata table for a pool of flowcells.  
+                            Database Records: View Palmer Lab database phenotype and metadata tables per project.  
+                            HS West Records: HS West Colony birth, prediction, and genotyping records.  
+                         ''')
+        navi.write("""**:blue[User Tools:]**  
+                        MedPC Extractor: Upload MedPC files and display the values as a table.  
+                        Regional Association Tools: Build PheWAS tables and locuszoom plots with data from a report.  
+                        GWAS Reports: View an archive of GWAS reports for a project.  
+                        Rat Metadata: View Palmer Lab records for any rat given its RFID.  
+                        Database Records: View Palmer Lab database phenotype and metadata tables per project.  
+                        Trait Correlations: Compare traits between two projects.  
+                         """)
+    navi.write("""**:violet[Public Resources:]**  
+                        Genotyping Reports: View data and records from our genotyping reports.
+                    """)
     
 
 with st.sidebar:
