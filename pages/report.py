@@ -49,8 +49,6 @@ def extract_date(input_string):
 st.title('GWAS Reports')
 st.write('Please sign in to access an archive of GWAS reports for your projects.')
     
-data = 'https://www.dropbox.com/scl/fi/wrhelbhblbqp294epvbyg/gwas_reports.csv?rlkey=byxwurl53dvdenkywv8r4rvpe&dl=1'
-
 if is_logged_in:
     # df = pd.read_csv(data)
     df = conn.query(f"""select * from sample_tracking.gwas_reports""")
@@ -70,15 +68,15 @@ if is_logged_in:
 
     if perm is not None and perm.projects[0] is not None:
         # project list available
-        if admin not in username:
-            allow = perm.projects[0].split(', ')
-        else: 
+        if admin in username:
             allow = perm.projects.tolist()
-
+        else: 
+            allow = perm.projects[0].split(', ')
+            
     # query projects
     reports = df.project.unique()
-    allow = [x for x in allow if x in reports]
-    projects = sorted(allow)
+    reports_allow = [x for x in reports if x in allow]
+    projects = sorted(reports_allow)
 
     # project picker
     option = st.selectbox(label='Select project', 
