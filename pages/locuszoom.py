@@ -228,7 +228,7 @@ if perm is not None and perm.projects[0] is not None:
                              locuszoom_path='GWAS_pipeline/locuszoom/',
                              phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
                              threads = 6,
-                             gtf = f'https://www.dropbox.com/scl/fi/ai1fw6fxsazns0pt40yec/rn_7_gtf.csv?rlkey=ovyi0mdaz71oci9mhtxchhvxw&dl=1')
+                             gtf = f'https://palmerlab.s3.sdsc.edu/elaine/rn_7_gtf.csv')
                 self = gwas
                 st.session_state['gwas'] = self
 
