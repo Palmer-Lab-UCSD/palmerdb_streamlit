@@ -106,6 +106,16 @@ def build_query(table, options=None, value=None, value2=None, value3=None):
     query = f"SELECT * FROM sample_tracking.{table}"
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
+    
+    if 'drop' in query.lower() or 'commit' in query.lower() \
+                                   or 'insert' in query.lower() \
+                                   or 'delete' in query.lower() \
+                                   or 'update' in query.lower() \
+                                   or 'alter' in query.lower()  \
+                                   or 'commit' in query.lower():
+            st.write("Invalid query.")
+            st.stop()
+            
     return query
 
 if is_logged_in and admin not in username:
