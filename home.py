@@ -49,7 +49,7 @@ st.write(
 with st.container(border=True):
     st.write('##### :green-background[Navigation]')
     navi = st.chat_message('Palmer Lab', avatar='./assets/chat.png')
-    navi.write("Login to see a list of tools available to you!")
+    navi.write("Log in to see a list of tools available to you!")
     if is_logged_in:
         if admin in username: 
             navi.write('''**:green[Palmer Lab Tools:]**  

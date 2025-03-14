@@ -47,7 +47,7 @@ st.write('''
          This tool displays the rG, rGse, and p-value between two traits. To begin, select a project from either dropdown. 
          
          Select a second project from the other dropdown to compare, or leave it blank to view traits from all projects.
-         - The page sidebar on the left can be closed with the X if the table is truncated.
+         - The page sidebar on the left can be closed with the X for a full view.
          - The columns can be sorted by clicking on the column titles. 
          - Use the toggles to highlight certain columns based on the gradient scales shown.
          - Use the download button below the table to download the selection.
@@ -64,7 +64,7 @@ authenticator, username, hidden, admin, is_logged_in= start_auth()
 if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
     # read file and organize df
-    df = pd.read_parquet("allgenetic_correlations.parquet.gz")
+    df = pd.read_parquet("https://palmerlab.s3.sdsc.edu/elaine/allgenetic_correlations.parquet.gz")
     df['project1'] = df.trait1.str.split(':').str[0]
     df['trait1'] = df.trait1.str.split(':').str[1]
     df['project2'] = df.trait2.str.split(':').str[0]
@@ -132,7 +132,7 @@ if is_logged_in:
             display = df.style.background_gradient(subset=['pval'], cmap='Oranges', vmin=0)
         else:
             display = df.style.format({"rG": "{:.6f}", "rGse": "{:.6f}", "pval": "{:.6f}"})
-
+            
         # display df (copy)
         st.dataframe(display, width = 2000, hide_index=True,
                      column_config={"project1":st.column_config.Column(
@@ -142,7 +142,7 @@ if is_logged_in:
                                             "project2", 
                                             width='small')})
         st.write(df.shape[0], ' rows')
-        
+
         log_action(logger, f'current rg threshold: {rg_threshold}')
         log_action(logger, f'current pval threshold: {p_threshold}')
         log_action(logger, f'rg highlight status: {highlight_rg}')
