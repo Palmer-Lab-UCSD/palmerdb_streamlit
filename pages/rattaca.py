@@ -58,6 +58,16 @@ def build_query(table=None):
     table: tables in schema
     '''
     query = f'SELECT * FROM hs_west_colony.{table}'
+    
+    if 'drop' in query.lower() or 'commit' in query.lower() \
+                                   or 'insert' in query.lower() \
+                                   or 'delete' in query.lower() \
+                                   or 'update' in query.lower() \
+                                   or 'alter' in query.lower()  \
+                                   or 'commit' in query.lower():
+            st.write("Invalid query.")
+            st.stop()
+        
     df = conn.query(query)
     st.dataframe(df)
     st.write(df.shape[0], ' samples;', df.shape[1], ' columns')
@@ -68,6 +78,9 @@ if is_logged_in and admin not in username:
 
 if is_logged_in and admin in username:
 
+    st.write('Select a generation and the records to view, or colony for all metadata:')
+    gen = None
+    table = None
     # table filter by DISPLAY in desc
     tables = conn.query(f"""SELECT table_name
                             FROM information_schema.tables
@@ -77,14 +90,20 @@ if is_logged_in and admin in username:
     tables = tables.loc[tables.table_name != 'wfu_master']
     display_tables = sorted(tables.table_name.tolist())
     
-
-    # select table
-    table = st.selectbox(label='Select table', 
-                       options=display_tables, index=None, 
+    gen = st.selectbox(label='Select generation:',
+                       options = ['Colony','G101', 'G103'],
+                      index=None,
+                      placeholder='Choose a generation', disabled=False, label_visibility="visible")
+    
+    if gen:
+        # select table
+        table = st.selectbox(label='Select table', 
+                       options=[x.split(gen.lower() + '_')[1] for x in display_tables if gen.lower() in x], index=None, 
                        placeholder="Choose an option", disabled=False, label_visibility="visible")
     
     # run query
     if table:
+        table = gen.lower() + '_' + table
         df = build_query(table)
 
         # download

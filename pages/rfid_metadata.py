@@ -135,6 +135,15 @@ if perm is not None and perm.projects[0] is not None:
         if rfid:
             log_action(logger,  f'{filename}: rfids selected: {rfid}')
             query += f"WHERE rfid IN ({rfid})"
+        
+        if 'drop' in query.lower() or 'commit' in query.lower() \
+                                   or 'insert' in query.lower() \
+                                   or 'delete' in query.lower() \
+                                   or 'update' in query.lower() \
+                                   or 'alter' in query.lower()  \
+                                   or 'commit' in query.lower():
+            st.write("Invalid query.")
+            st.stop()
 
         df = conn.query(query)
 

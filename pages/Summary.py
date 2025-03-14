@@ -33,6 +33,14 @@ if is_logged_in and admin not in username:
     st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
 
 if is_logged_in and admin in username:
+        st.title('Palmer Lab Database Summary')
+
+        # for download button
+        @st.cache_data
+        def convert_df(df):
+            # IMPORTANT: Cache the conversion to prevent computation on every rerun
+            return df.to_csv().encode('utf-8')
+        
         # db connection
         # creds in secret
         conn = st.connection("palmerdb", type="sql", autocommit=False)
@@ -43,15 +51,7 @@ if is_logged_in and admin in username:
         project = project.project_name.tolist()
         log_action(logger, f'{filename}: project list acquired')
 
-        st.title('Palmer Lab Database Summary')
-
-        # for download button
-        @st.cache_data
-        def convert_df(df):
-            # IMPORTANT: Cache the conversion to prevent computation on every rerun
-            return df.to_csv().encode('utf-8')
-
-        options = st.multiselect(label='select project', 
+        options = st.multiselect(label='Select project', 
                        options=project, default=None, 
                        placeholder="Choose an option", disabled=False, label_visibility="visible")
         # options = ','.join([f"'{option}'" for option in options])

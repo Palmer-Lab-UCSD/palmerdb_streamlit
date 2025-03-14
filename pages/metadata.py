@@ -48,7 +48,7 @@ if is_logged_in and admin in username:
     
     pool = conn.query("select distinct pool from sample_tracking.sample_barcode_lib where pool != 'None' order by pool")
     pool = pool.pool.tolist()
-    pools = st.selectbox(label='select pool', 
+    pools = st.selectbox(label='Select pool', 
                            options=pool, index = None,
                            placeholder="Choose a pool", disabled=False, label_visibility="visible", key=4)
     log_action(logger, f'pools selected: {pools}')
@@ -58,6 +58,7 @@ if is_logged_in and admin in username:
             FROM sample_tracking.sample_barcode_lib
             WHERE pool = '{pools}' 
             """
+        
     projects = conn.query(projects_query)
     projects = projects.project_name.tolist()
     # projects = [p for p in projects if p != 'rattaca_colony']
@@ -90,6 +91,17 @@ if is_logged_in and admin in username:
     
     # query
     if pools is not None:
+            
+        if 'drop' in sql.lower() or 'commit' in sql.lower() \
+                                       or 'insert' in sql.lower() \
+                                       or 'delete' in sql.lower() \
+                                       or 'update' in sql.lower() \
+                                       or 'alter' in sql.lower()  \
+                                       or 'commit' in sql.lower():
+                df = pd.DataFrame([["Invalid query"]], columns=["Message"])
+                st.dataframe(df)
+                st.stop()
+        
         df = conn.query(sql)
     
     # filter selected animals
