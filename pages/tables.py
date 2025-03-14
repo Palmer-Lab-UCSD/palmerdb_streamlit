@@ -48,8 +48,7 @@ def reset():
 
 st.header('Database Records')
 st.write("""
-         Please sign in to view individual tables from the Palmer Lab Database for your projects. 
-         
+         Please sign in to view individual tables from the Palmer Lab Database for your projects.  
          To request additional permissions, please contact the Palmer Lab.
          """)
 
@@ -60,6 +59,15 @@ def build_query(project=None, table=None):
     table: tables in schema
     '''
     query = f'SELECT * FROM {project}.{table}'
+    if 'drop' in query.lower() or 'commit' in query.lower() \
+                                   or 'insert' in query.lower() \
+                                   or 'delete' in query.lower() \
+                                   or 'update' in query.lower() \
+                                   or 'alter' in query.lower()  \
+                                   or 'commit' in query.lower():
+            st.write("Invalid query.")
+            st.stop()
+            
     df = conn.query(query)
     return df
 
@@ -82,6 +90,12 @@ if perm is not None and perm.projects[0] is not None:
         allow = perm.projects[0].split(', ')
     else: 
         allow = perm.projects.tolist()
+        
+    st.write('''Use the dropdowns to select the table you'd like to retrieve.  
+    The table is interactive:
+- Click on a column to sort the table by that column.
+- Hover in the top right of the table to find a search option or to enter fullscreen.''')
+    st.write('*Note: Due to the size of some tables, the query may take a while, and the displayed data will be truncated. The full data is available for download using the button at the bottom of the page.*')
 
     # query projects
     projects = sorted([x for x in allow if 'hs_west_colony' not in x])
@@ -136,19 +150,22 @@ if perm is not None and perm.projects[0] is not None:
     
     # run query
     if option and table:
-        df = build_query(option, table)
-        st.dataframe(df)
-        st.write(df.shape[0], ' samples;', df.shape[1], ' columns')
+        run = st.button('Run query')
+        if run:
+            df = build_query(option, table)
+            if df.shape[0] > 500:
+                st.write('Due to the large size of the data, only the first 200 rows will be shown. The remaining rows will exist in the downloaded CSV (button below).')
+            st.dataframe(df.head(200))
+            st.write(df.shape[0], ' samples;', df.shape[1], ' columns')
 
-        # download
-        csv = convert_df(df) 
-        st.download_button(
-            label="Download data as CSV",
-            data=csv,
-            file_name=f'metadata_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
-            mime='text/csv',
-        )
-
+            # download
+            csv = convert_df(df) 
+            st.download_button(
+                label="Download data as CSV",
+                data=csv,
+                file_name=f'{option}_{table}_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
+                mime='text/csv',
+            )
 
 # force refresh
 if st.button('Refresh', on_click = st.cache_data.clear()):
