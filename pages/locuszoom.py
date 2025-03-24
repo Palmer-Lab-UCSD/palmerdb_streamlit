@@ -8,6 +8,7 @@ import pandas as pd
 from components.logger import *
 from components.authenticate import *
 import os
+import sys
 from streamlit_cognito_auth import CognitoAuthenticator
 from dotenv import load_dotenv
 from st_pages import show_pages_from_config, add_indentation, hide_pages
@@ -43,6 +44,18 @@ def phewas(self):
 def locuszoom(self):
     self.locuszoom_widget()
     return
+
+def get_free_space():
+    total, used, free = shutil.disk_usage("/")
+    log_action(logger, f"Free disk space: {free / (1024 * 1024):.2f} MB")
+    return
+
+def progress_callback(current, total, width=50):
+    percent = current / total
+    bar = "#" * int(percent * width) + "-" * (width - int(percent * width))
+    sys.stdout.write(f"\rDownloading: [{bar}] {percent * 100:.2f}%")
+    sys.stdout.flush()
+
 
 def reset():
     # do not store more than 3 zip files
@@ -130,120 +143,136 @@ if perm is not None and perm.projects[0] is not None:
         if file is not None and 'LATEST' in file:
             log_action(logger, f'{filename}: selected file {file}')
             file = file[9:]
-
+            
         # begin init
         if 'gwas' not in st.session_state:
-            if file is not None and project is not None:
-                # get data
-                url = f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/{file}'
-                with st.status("Initializing...") as status:
-                    status.update(label="Preparing data...", state="running")
-                    try:
-                        if os.path.isfile(file):
-                            # if already have zip
-                            log_action(logger, f'{filename}: already have {url} unzipping')
-                            with ZipFile(f"{file}", 'r') as zObject:
-                                status.update(label="Loading data...", state='running')
-                                zObject.extractall() 
-                                status.update(label='Ready! Initializing object.', state='complete')
-                        else:
-                            # if do not have zip
-                            filename = wget.download(url)
-                            log_action(logger, f'{filename}: getting {url}')
-                            with ZipFile(f"{filename}", 'r') as zObject:
-                                status.update(label="Data preparation complete.", state="complete")
-                                time.sleep(3)
-                                status.update(label="Loading data...", state='running')
-                                zObject.extractall()
-                                status.update(label="Ready! Initializing object.", state='complete')
-                                
-                    # volume space issues
-                    # dir structure from extract includes /tscc, /project commonly
-                    # also remove all zip files
-                    except OSError as e:
-                        if 'space' in str(e):
-                            st.write('Clearing storage...')
-                            files = os.listdir('.')
-                            zip_files = [file for file in files if file.endswith('.zip')]
-                            for file in zip_files:
-                                os.remove(file)
-                            if os.path.exists('tscc') and os.path.isdir('tscc'):
-                                shutil.rmtree('tscc')
-                            if os.path.exists(project) and os.path.isdir(project):
-                                shutil.rmtree(project)
-                            if os.path.exists('projects') and os.path.isdir('projects'):
-                                shutil.rmtree('projects')
-                            st.cache_data.clear()
-                            st.rerun()
-                            
-                        else:
-                            # Handle other OS errors and show me
-                            st.write(f"An unexpected OSError occurred: {e}") 
-            else:
-                st.stop()
-            
-            # prepare data
-            df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
-            
-            # edge
-            # finding where the extracted files are
-            base = os.getcwd()
-            log_action(logger, f'base path: {base}')
-            target1 = os.path.join(base, 'tscc', 'projects', 'ps-palmer', 'gwas', 'projects', project)
-            target2 = os.path.join(base, 'projects', 'ps-palmer', 'gwas', 'projects', project)
-            target3 = os.path.join(base, project)
-            log_action(logger, f'tscc: {os.path.isdir(target1)}')
-            log_action(logger, f'project: {os.path.isdir(target2)}')
-            log_action(logger, f'root: {os.path.isdir(target3)}')
+            if st.button('Start'):
+                if file is not None and project is not None:
+                    # get data
+                    url = f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/{file}'
+                    with st.status("Initializing...") as status:
+                        status.update(label="Preparing data...", state="running")
+                        get_free_space()
+                        try:
+                            if os.path.isfile(file):
+                                log_action(logger, os.path.isfile(file))
+                                # if already have zip
+                                log_action(logger, f'{filename}: already have {url} unzipping')
+                                with ZipFile(f"{file}", 'r') as zObject:
+                                    status.update(label="Loading data...", state='running')
+                                    zObject.extractall() 
+                                    status.update(label='Ready! Initializing object.', state='complete')
+                                    log_action(logger, 'files ready')
+                            else:
+                                # if do not have zip
+                                log_action(logger, os.listdir('.'))
+                                log_action(logger, f'{filename}: getting {url}')
+                                filename = wget.download(url, bar=progress_callback)
+                                log_action(logger, f'{filename}: download finished')
+                                with ZipFile(f"{filename}", 'r') as zObject:
+                                    status.update(label="Data preparation complete.", state="complete")
+                                    time.sleep(3)
+                                    log_action(logger, 'start unzipping')
+                                    status.update(label="Loading data...", state='running')
+                                    zObject.extractall()
+                                    status.update(label="Ready! Initializing object.", state='complete')
+                                    log_action(logger, 'files ready')
+                                    get_free_space()
 
-            if os.path.isdir(target1):
-                path = target1 + '/'
-            elif os.path.isdir(target2):
-                path = target2 + '/'
-            else:
-                path = target3 + '/'
-            
-            log_action(logger, f'final path: {path}')
 
-            if not os.path.isdir(path):
-                # 
-                st.write('The files are currently not available, please select a different version and try again.')
-                st.stop()
-            
-            # getting genotype path
-            geno_path =  os.path.join(base,'genotypes') + '/genotypes'
-            founder_path =  os.path.join(base,'founder_genotypes') + '/founder7.2'
-                
-            if len(path) > 0:
-                # init
-                log_action(logger, f'{filename}: initializing')
-                gwas = gwas_pipe(path = path,
-                             data = df,
-                             project_name = f'{project}',
-                             n_autosome =20,
-                             all_genotypes =  geno_path,
-                             traits = [], 
-                             threshold=5.36,
-                             founderfile = founder_path,
-                             locuszoom_path='GWAS_pipeline/locuszoom/',
-                             phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
-                             threads = 6,
-                             gtf = f'https://palmerlab.s3.sdsc.edu/elaine/rn_7_gtf.csv')
-                self = gwas
-                st.session_state['gwas'] = self
+                        # volume space issues
+                        # dir structure from extract includes /tscc, /project commonly
+                        # also remove all zip files
+                        except OSError as e:
+                            if 'space' in str(e):
+                                st.write('Clearing storage...')
+                                files = os.listdir('.')
+                                log_action(logger, f'files: {files}')
+                                zip_files = [file for file in files if file.endswith('.zip')]
+                                tmp_files = [file for file in files if file.endswith('.tmp')]
+                                for file in zip_files:
+                                    os.remove(file)
+                                for file in tmp_files:
+                                    os.remove(file)
+                                if os.path.exists('tscc') and os.path.isdir('tscc'):
+                                    shutil.rmtree('tscc')
+                                if os.path.exists(project) and os.path.isdir(project):
+                                    shutil.rmtree(project)
+                                if os.path.exists('projects') and os.path.isdir('projects'):
+                                    shutil.rmtree('projects')
+                                st.cache_data.clear()
+                                st.rerun()
+
+                            else:
+                                # Handle other OS errors and show me
+                                st.write(f"An unexpected OSError occurred: {e}")
+                                st.stop()
+                else:
+                    st.stop()
+
+                # prepare data
+                df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{project}/processed_data_ready.csv', dtype = {'rfid':str})
+
+                # edge
+                # finding where the extracted files are
+                base = os.getcwd()
+                log_action(logger, f'base path: {base}')
+                target1 = os.path.join(base, 'tscc', 'projects', 'ps-palmer', 'gwas', 'projects', project)
+                target2 = os.path.join(base, 'projects', 'ps-palmer', 'gwas', 'projects', project)
+                target3 = os.path.join(base, project)
+                log_action(logger, f'tscc: {os.path.isdir(target1)}')
+                log_action(logger, f'project: {os.path.isdir(target2)}')
+                log_action(logger, f'root: {os.path.isdir(target3)}')
+
+                if os.path.isdir(target1):
+                    path = target1 + '/'
+                elif os.path.isdir(target2):
+                    path = target2 + '/'
+                else:
+                    path = target3 + '/'
+
+                log_action(logger, f'final path: {path}')
+
+                if not os.path.isdir(path):
+                    # 
+                    st.write('The files are currently not available, please select a different version and try again.')
+                    st.stop()
+
+                # getting genotype path
+                geno_path =  os.path.join(base,'genotypes') + '/genotypes'
+                founder_path =  os.path.join(base,'founder_genotypes') + '/founder7.2'
+
+                if len(path) > 0:
+                    # init
+                    log_action(logger, f'{filename}: initializing')
+                    gwas = gwas_pipe(path = path,
+                                 data = df,
+                                 project_name = f'{project}',
+                                 n_autosome =20,
+                                 all_genotypes =  geno_path,
+                                 traits = [], 
+                                 threshold=5.36,
+                                 founderfile = founder_path,
+                                 locuszoom_path='GWAS_pipeline/locuszoom/',
+                                 phewas_db = 'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/phewasdb_rn7_g102.parquet.gz',
+                                 threads = 6,
+                                 gtf = f'https://palmerlab.s3.sdsc.edu/elaine/rn_7_gtf.csv')
+                    self = gwas
+                    log_action(logger, 'object ready')
+                    st.session_state['gwas'] = self
 
         if 'gwas' in st.session_state:
-            # if changed option but don't want to init object again
-            self = st.session_state['gwas']
-            st.write('##### Phenotype Wide Association Study (PheWAS): ')
-            phewas(self)
-            st.write('##### Locuszoom Plot: ')
-            locuszoom(self)
+                # if changed option but don't want to init object again
+                self = st.session_state['gwas']
+                st.write('##### Phenotype Wide Association Study (PheWAS): ')
+                phewas(self)
+                st.write('##### Locuszoom Plot: ')
+                locuszoom(self)
 
-            if st.button("Refresh"):
-                # hard clear
-                reset()
-                st.rerun()
+                if st.button("Refresh"):
+                    # hard clear
+                    reset()
+                    st.rerun()
                 
 with st.sidebar:
     st.markdown('''
