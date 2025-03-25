@@ -93,7 +93,6 @@ if is_logged_in and admin in username:
         st.write('No valid entries.')
         st.stop()
         
-    # projects = [p for p in projects if p != 'rattaca_colony']
     sql = f"""
             rollback;
             begin transaction;
@@ -119,19 +118,19 @@ if is_logged_in and admin in username:
                 LEFT JOIN (select rfid, sex, sire as sires, dam as dames, coatcolor from {project}.colony_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
             """
             
-    if pools and rfids:      
+    if pools and rfids:
         sql += f"""
                 WHERE
                     a.pool in ({pools}) and a.rfid in ({rfids})
                     )
             """
-    if pools:      
+    if pools:
         sql += f"""
                 WHERE
                     a.pool in ({pools})
                     )
             """
-    if rfids:      
+    if rfids:
         sql += f"""
                 WHERE
                     a.rfid in ({rfids})
