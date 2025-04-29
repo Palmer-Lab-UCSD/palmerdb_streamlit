@@ -98,14 +98,14 @@ if is_logged_in and admin in username:
             begin transaction;
             with main as (
                 SELECT
-                    a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode,
+                    a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 'riptide' as seq_method,
                     case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
                     case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                    a.fastq_files
+                    a.fastq_files, tt.tissue_type
                 FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
@@ -117,6 +117,8 @@ if is_logged_in and admin in username:
             sql += f"""
                 LEFT JOIN (select rfid, sex, sire as sires, dam as dames, coatcolor from {project}.colony_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
             """
+
+    sql += f"""LEFT JOIN (select rfid, tissue_type from sample_tracking.extraction_log) AS tt ON a.rfid = tt.rfid"""
             
     if pools and rfids:
         sql += f"""
@@ -165,6 +167,9 @@ if is_logged_in and admin in username:
                 st.stop()
         
         df = conn.query(sql)
+        df.loc[df.project_name == 'archival_hs_rats_baud', 'tissue_type'] = 'liver'
+        df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
+        df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
     
     # filter selected animals
         if org is not None:
