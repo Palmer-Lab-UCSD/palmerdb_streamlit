@@ -95,6 +95,14 @@ def build_query(table, options=None, value=None, value2=None, value3=None):
         conditions.append(f"rfid IN ({value}) AND runid = {value2}")
     elif value:
         log_action(logger,  f'{filename}: rfids selected: {value}')
+        if 'drop' in value.lower() or 'commit' in value.lower() \
+                                       or 'insert' in value.lower() \
+                                       or 'delete' in value.lower() \
+                                       or 'update' in value.lower() \
+                                       or 'alter' in value.lower()  \
+                                       or 'commit' in value.lower():
+            query = 'Invalid query.'
+            return query
         conditions.append(f"rfid IN ({value})")
     elif value2:
         log_action(logger,  f'{filename}: runid selected: {value2}')
@@ -107,15 +115,7 @@ def build_query(table, options=None, value=None, value2=None, value3=None):
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
     
-    if 'drop' in query.lower() or 'commit' in query.lower() \
-                                   or 'insert' in query.lower() \
-                                   or 'delete' in query.lower() \
-                                   or 'update' in query.lower() \
-                                   or 'alter' in query.lower()  \
-                                   or 'commit' in query.lower():
-            st.write("Invalid query.")
-            st.stop()
-            
+    
     return query
 
 if is_logged_in and admin not in username:
@@ -139,8 +139,7 @@ if is_logged_in and admin in username:
     rna = load_table('rna')
     rna_extraction_log = load_table('rna_extraction_log')
     genotyping_log = load_table('genotyping_log_total')
-    rna = load_table('rna')
-    rna_extraction_log = load_table('rna_extraction_log')
+    genotyping_drops = load_table('genotyping_drops')
     
     # project list
     project = load_projects()
@@ -309,7 +308,7 @@ if is_logged_in and admin in username:
         # fullquery = 'rollback; begin transaction; ' + query
         # df = conn.query(fullquery)
         
-        df = filter_df(genotyping_log, projects, rfids)
+        df = filter_df(genotyping_drops, projects, rfids)
 
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
