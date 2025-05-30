@@ -119,6 +119,7 @@ if perm is not None and perm.projects[0] is not None:
         'behavioral':'behavioral phenotypes',
         'nicsa':'nicsa phenotypes',
         'raw_phenotypes':'raw data',
+        'raw_phenotypes_long':'raw data long format',
         'gwas_phenotypes_current':'behavioral phenotypes',
         'gwas_phenotypes':'behavioral phenotypes',
         'locomotor_phenotypes':'locomotor phenotypes',
