@@ -59,19 +59,35 @@ filename = os.path.basename(__file__)
 
 log_action(logger, f'{filename}: app started')
 
+conn = st.connection("palmerdb", type="sql", autocommit=False)
 authenticator, username, hidden, admin, is_logged_in= start_auth()
 
 if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
     # read file and organize df
+    if is_logged_in and admin not in username:
+        # case: logged in, external account
+        prefix = username.split('_')[0]
+        perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
+    else:
+        # case: not logged in
+        perm = None
+        
     df = pd.read_parquet("https://palmerlab.s3.sdsc.edu/elaine/allgenetic_correlations.parquet.gz")
     df['project1'] = df.trait1.str.split(':').str[0]
     df['trait1'] = df.trait1.str.split(':').str[1]
     df['project2'] = df.trait2.str.split(':').str[0]
     df['trait2'] = df.trait2.str.split(':').str[1]
     df = df[['project1', 'trait1', 'rG', 'rGse', 'rG_string', 'pval', 'trait2', 'project2']]
-
+    
+    
     projects1 = sorted(set(df.project1.tolist()))
+    if perm is not None and perm.projects[0] is not None:
+        # project list available
+        if admin not in username:
+            projects = perm.projects[0].split(', ')
+            projects1 = [x for x in projects1 if x in projects]
+
     projects2 = sorted(set(df.project2.tolist()))
 
     # split selection
