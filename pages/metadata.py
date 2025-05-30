@@ -118,7 +118,8 @@ if is_logged_in and admin in username:
                 LEFT JOIN (select rfid, sex, sire as sires, dam as dames, coatcolor from {project}.colony_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
             """
 
-    sql += f"""LEFT JOIN (select rfid, tissue_type from sample_tracking.extraction_log) AS tt ON a.rfid = tt.rfid"""
+    sql += f"""LEFT JOIN (select rfid, riptide_plate_number, tissue_type from sample_tracking.extraction_log) AS tt ON a.rfid = tt.rfid 
+                AND a.library_name = tt.riptide_plate_number"""
             
     if pools and rfids:
         sql += f"""
