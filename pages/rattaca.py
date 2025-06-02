@@ -91,7 +91,7 @@ if is_logged_in and admin in username:
     display_tables = sorted(tables.table_name.tolist())
     
     gen = st.selectbox(label='Select generation:',
-                       options = ['Colony','G101', 'G103'],
+                       options = ['Colony','G101', 'G103', 'G105'],
                       index=None,
                       placeholder='Choose a generation', disabled=False, label_visibility="visible")
     

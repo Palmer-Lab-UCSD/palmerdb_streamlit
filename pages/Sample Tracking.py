@@ -95,14 +95,24 @@ def build_query(table, options=None, value=None, value2=None, value3=None):
         conditions.append(f"rfid IN ({value}) AND runid = {value2}")
     elif value:
         log_action(logger,  f'{filename}: rfids selected: {value}')
-        if 'drop' in value.lower() or 'commit' in value.lower() \
+        if 'drops' in table:
+            if 'commit' in value.lower() \
+               or 'insert' in value.lower() \
+               or 'delete' in value.lower() \
+               or 'update' in value.lower() \
+               or 'alter' in value.lower()  \
+               or 'commit' in value.lower():
+                query = 'Invalid query.'
+                return query
+        else:  
+            if 'drop' in value.lower() or 'commit' in value.lower() \
                                        or 'insert' in value.lower() \
                                        or 'delete' in value.lower() \
                                        or 'update' in value.lower() \
                                        or 'alter' in value.lower()  \
                                        or 'commit' in value.lower():
-            query = 'Invalid query.'
-            return query
+                query = 'Invalid query.'
+                return query
         conditions.append(f"rfid IN ({value})")
     elif value2:
         log_action(logger,  f'{filename}: runid selected: {value2}')
@@ -304,7 +314,7 @@ if is_logged_in and admin in username:
         st.header("Genotyping Drops")
     
         query = build_query('genotyping_drops', projects_sql, rfids_sql)
-        st.code(query) # remove later
+        # st.code(query) # remove later
         # fullquery = 'rollback; begin transaction; ' + query
         # df = conn.query(fullquery)
         

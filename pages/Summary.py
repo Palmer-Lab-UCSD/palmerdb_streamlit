@@ -9,6 +9,9 @@ import time
 from components.logger import *
 from components.authenticate import *
 import os
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.colors
 from streamlit_cognito_auth import CognitoAuthenticator
 from dotenv import load_dotenv
 from st_pages import show_pages_from_config, add_indentation, hide_pages
@@ -40,6 +43,7 @@ if is_logged_in and admin in username:
         def convert_df(df):
             # IMPORTANT: Cache the conversion to prevent computation on every rerun
             return df.to_csv().encode('utf-8')
+        
         
         # db connection
         # creds in secret
@@ -73,7 +77,7 @@ if is_logged_in and admin in username:
                sequenced as 
                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS sequenced
                         FROM sample_tracking.sample_metadata sm
-                        JOIN sample_tracking.sample_barcode_lib gl ON sm.rfid = gl.rfid
+                        LEFT JOIN sample_tracking.sample_barcode_lib gl ON sm.rfid = gl.rfid
                         GROUP BY sm.project_name),
                genotype as 
                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS genotyped
@@ -98,7 +102,6 @@ if is_logged_in and admin in username:
                         JOIN sample_tracking.rna_extraction_log gl ON sm.rfid = gl.rfid
                         GROUP BY sm.project_name)
 
-
                 SELECT 
                     distinct pm.project_name, 
                     coalesce(h.shipped, 0) as shipped,
@@ -122,9 +125,29 @@ if is_logged_in and admin in username:
 
                 order by pm.project_name
         '''
+        
         # make connection
-        df = conn.query(sql)
-        log_action(logger, f'{filename}: form dataframe')
+        if 'full' not in st.session_state:
+            pheno_tables = conn.query('''SELECT table_schema, table_name
+                            FROM information_schema.tables
+                            WHERE table_name = 'gwas_phenotypes'
+                            AND table_type = 'BASE TABLE'
+                            AND table_schema NOT IN ('pg_catalog', 'information_schema')
+                            ''')
+            pheno_proj = pheno_tables.table_schema.unique().tolist()
+            pheno = pd.DataFrame()        
+            for proj in pheno_proj:
+                proj_pheno = conn.query(f'''select coalesce(count(*),0) as phenotyped, 
+                                            '{proj}' as project_name from {proj}.gwas_phenotypes''')
+                pheno = pd.concat([pheno, proj_pheno])
+
+            df = conn.query(sql)
+            log_action(logger, f'{filename}: form dataframe')
+            df = df.merge(pheno,how='left',on='project_name')
+            df.phenotyped.fillna(0,inplace=True)
+            st.session_state['full'] = df
+            
+        df = st.session_state['full']
 
         # filter selected projects
         if len(options) > 0:
@@ -132,26 +155,91 @@ if is_logged_in and admin in username:
             df = df.loc[df.project_name.isin(options)]
 
         # display df, shape
-        st.dataframe(df)
+        df = df[['project_name', 'shipped', 'phenotyped', 'tissue', 'dna_extracted', 'sequenced', 
+                 'genotyped', 'redo', 'rna_received', 'rna_extracted']]
+        st.dataframe(df, hide_index=True)
 
         st.write(len(df), ' projects')
 
+       
         # download
         csv = convert_df(df) 
         st.download_button(
-            label="Download data as CSV",
+            label="Download summary as CSV",
             data=csv,
             file_name=f'n{len(df)}_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
+        
+        if len(options) == 1:
+            
+            # fig = px.funnel_area(names=['shipped', 'phenotyped', 'tissue', 
+            #                             'dna_extracted', 'sequenced', 'genotyped'],
+            #         values=df.iloc[0,1:7])
+            # st.plotly_chart(fig)
 
+#         compare = st.selectbox(label='Select comparison column', 
+#                        options=['phenotyped', 'tissue', 
+#                                 'dna_extracted', 'sequenced','genotyped'], index=None, 
+#                        placeholder="Choose an option", disabled=False, label_visibility="visible",
+#                        help='Shows the difference compared to selected column')
+        
+#         def create_diff_df(df, selected_column):
+#             """
+#             Parameters:
+#             df: Original DataFrame with project metrics
+#             selected_column: Column to subtract from others (one of: 'shipped', 'phenotyped', 
+#                             'tissue', 'dna_extracted', 'sequenced')
+
+#             Returns:
+#             DataFrame with project_name and difference columns
+#             """
+#             # Columns to subtract from (exclude non-metric columns and selected column)
+            
+
+#             # Create new DF with project names
+#             df_diff = df[['project_name', 'shipped', selected_column]].copy()
+
+#             # Calculate differences for each target column
+#             for col in ['phenotyped', 'tissue', 'dna_extracted', 
+#                        'sequenced', 'genotyped']:
+#                 if col != selected_column:  # Avoid subtracting from itself
+#                     new_col = f"{col} - {selected_column}"
+#                     df_diff[new_col] = df[col] - df[selected_column]
+#                     df_diff.loc[df_diff[new_col] < 0, new_col] = None
+
+#             return df_diff
+            
+#         if compare:
+#             diff= create_diff_df(df, compare)
+#             st.dataframe(diff, hide_index=True)
+
+            # Create a funnel chart with two traces
+            track_cols = ['shipped', 'phenotyped', 'tissue', 'dna_extracted', 'sequenced', 'genotyped']
+            counts = df.iloc[0,1:7].tolist()
+            fig = go.Figure(go.Funnel(
+                name='Initial Name 1',
+                y=track_cols,
+                x=counts))
+            
+            fig.update_traces(
+                marker=dict(
+                    color=plotly.colors.sequential.Plasma[2:8],   # Name of the colorscale
+                    showscale=True          # Show the colorbar
+                ),
+                selector=dict(type='funnel')
+            )
+
+
+            # Update the name of all funnel traces
+            fig.update_traces(name='Updated Funnel', selector=dict(type='funnel'))
+
+            st.plotly_chart(fig)
+            
         # force refresh
         if st.button('Refresh', on_click = st.cache_data.clear()):
             log_action(logger, f'{filename}: refresh button clicked')
             st.cache_data.clear()
-            
-    # else:
-        # st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
 
 with st.sidebar:
     st.markdown('''
