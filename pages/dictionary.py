@@ -40,11 +40,15 @@ if is_logged_in and admin in username:
     log_action(logger, f'{filename}: database connection made')
     
     # project list
-    project = conn.query("select project_name from sample_tracking.project_metadata order by project_name")
-    project = project.project_name.tolist()
-    project = [p for p in project if '0' in p]
+    projects = conn.query("""SELECT table_schema
+                            FROM information_schema.tables
+                            WHERE table_name = 'descriptions'""")
+        #"select project_name from sample_tracking.project_metadata order by project_name")
+    project = projects.table_schema.tolist()
+    # project = [p for p in project if '0' in p]
     project = sorted(project)
     log_action(logger, f'{filename}: project list acquired')
+
     
     # for download button
     @st.cache_data
@@ -66,7 +70,8 @@ if is_logged_in and admin in username:
         if option is not None:
             log_action(logger, f'project selected {option}')
             try:
-                df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{option}/data_dict_{option}.csv')
+                df = conn.query(f'select * from {option}.descriptions')
+                # df = pd.read_csv(f'https://palmerlab.s3.sdsc.edu/tsanches_dash_genotypes/gwas_results/{option}/data_dict_{option}.csv')
                 st.dataframe(df)
                 st.write('Total traits: ', len(df))
                 st.download_button(
