@@ -44,7 +44,7 @@ if is_logged_in and admin in username:
     @st.cache_data
     def convert_df(df):
         # IMPORTANT: Cache the conversion to prevent computation on every rerun
-        return df.to_csv().encode('utf-8')
+        return df.to_csv(index=False).encode('utf-8')
     
     pool = conn.query("select distinct pool from sample_tracking.sample_barcode_lib where pool != 'None' order by pool")
     pool = pool.pool.tolist()
@@ -171,12 +171,13 @@ if is_logged_in and admin in username:
         df.loc[df.project_name == 'archival_hs_rats_baud', 'tissue_type'] = 'liver'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
+        df.pcr_barcode = df.pcr_barcode.astype(int)
     
     # filter selected animals
         if org is not None:
             log_action(logger, f'animals chosen: {org}')
             df = df.loc[df.organism.isin(org)]
-        st.dataframe(df)
+        st.dataframe(df, hide_index=True)
     
         st.write(len(df), ' samples')
         

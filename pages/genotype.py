@@ -19,6 +19,11 @@ filename = os.path.basename(__file__)
 
 log_action(logger, f'{filename}: page entered')
 
+authenticator, username, hidden, admin, is_logged_in= start_auth()
+if is_logged_in:
+    log_action(logger, f'{filename}: authentication status: true, user name: {username}')
+
+
 # content
 st.title('Genotype Reports')
 
