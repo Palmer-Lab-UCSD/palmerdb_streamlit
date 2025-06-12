@@ -37,60 +37,125 @@ if is_logged_in and admin not in username:
 if is_logged_in and admin in username:
 
     st.title("Metadata for Genotyping")
-    st.write("Please select a pool to begin.")
+    st.write("Please select pools or enter RFIDs to begin.")
     conn = st.connection("palmerdb", type="sql", autocommit=False)
     
     # for download button
     @st.cache_data
     def convert_df(df):
         # IMPORTANT: Cache the conversion to prevent computation on every rerun
-        return df.to_csv().encode('utf-8')
+        return df.to_csv(index=False).encode('utf-8')
     
     pool = conn.query("select distinct pool from sample_tracking.sample_barcode_lib where pool != 'None' order by pool")
     pool = pool.pool.tolist()
-    pools = st.selectbox(label='Select pool', 
-                           options=pool, index = None,
+    pools = st.multiselect(label='Select pool', 
+                           options=pool, default = None,
                            placeholder="Choose a pool", disabled=False, label_visibility="visible", key=4)
+    if pools:
+        pools = ", ".join(f"'{item}'" for item in pools)
     log_action(logger, f'pools selected: {pools}')
+    rfids = st.text_area(label='Enter RFIDs:', value='', 
+                         help='Valid formats: comma/space/newline separated')
+    if len(rfids) >= 1:
+        if ',' in rfids:
+            # if they are comma separated
+            rfids =  ', '.join([f"'{v.strip()}'" for v in rfids.split(',') if v.strip()])
+        else:
+            # if they are not comma separated
+            rfids =  ', '.join([f"'{v.strip()}'" for v in rfids.split() if v.strip()])
+        log_action(logger, f'rfids processed')
     
     # query text
-    projects_query = f""" SELECT DISTINCT project_name
-            FROM sample_tracking.sample_barcode_lib
-            WHERE pool = '{pools}' 
-            """
+    if pools and rfids:
+        projects_query = f""" SELECT DISTINCT project_name
+                FROM sample_tracking.sample_barcode_lib
+                WHERE pool in ({pools}) and rfid in ({rfids})
+                """
+    elif pools:
+        projects_query = f""" SELECT DISTINCT project_name
+                FROM sample_tracking.sample_barcode_lib
+                WHERE pool in ({pools})
+                """
+    elif rfids:
+        projects_query = f""" SELECT DISTINCT project_name
+                FROM sample_tracking.sample_barcode_lib
+                WHERE rfid in ({rfids})
+                """
+    if pools or rfids:
+        projects = conn.query(projects_query)
+        projects = projects.project_name.tolist()
+
+    else: 
+        projects = None
+        st.stop()
         
-    projects = conn.query(projects_query)
-    projects = projects.project_name.tolist()
-    # projects = [p for p in projects if p != 'rattaca_colony']
+    if len(projects) == 0:
+        st.write('No valid entries.')
+        st.stop()
+        
     sql = f"""
             rollback;
             begin transaction;
-            SELECT
-                a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode,
-                case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
-                case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
-                coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
-                coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
-                coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
-                coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                a.fastq_files
-            FROM sample_tracking.sample_barcode_lib AS a
+            with main as (
+                SELECT
+                    a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 'riptide' as seq_method,
+                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
+                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
+                    coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
+                    coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
+                    coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
+                    coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
+                    a.fastq_files, tt.tissue_type
+                FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
+        if project != 'hs_west_colony':
+            sql += f"""
+                LEFT JOIN (select rfid, sex, sires, dames, coatcolor from {project}.wfu_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
+            """
+        else:
+            sql += f"""
+                LEFT JOIN (select rfid, sex, sire as sires, dam as dames, coatcolor from {project}.colony_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
+            """
+
+    sql += f"""LEFT JOIN (select rfid, riptide_plate_number, tissue_type from sample_tracking.extraction_log) AS tt ON a.rfid = tt.rfid 
+                AND a.library_name = tt.riptide_plate_number"""
+            
+    if pools and rfids:
         sql += f"""
-            LEFT JOIN (select rfid, sex, sires, dames, coatcolor from {project}.wfu_master) AS {string.ascii_lowercase[i]} ON a.rfid = {string.ascii_lowercase[i]}.rfid
-        """
+                WHERE
+                    a.pool in ({pools}) and a.rfid in ({rfids})
+                    )
+            """
+    if pools:
+        sql += f"""
+                WHERE
+                    a.pool in ({pools})
+                    )
+            """
+    if rfids:
+        sql += f"""
+                WHERE
+                    a.rfid in ({rfids})
+                    )
+            """
+
     sql += f"""
-            WHERE
-                a.pool = '{pools}'
+            SELECT main.*, hswest_dams.damrfid, hswest_sires.sirerfid 
+            FROM main
+            LEFT JOIN (SELECT rfid AS damrfid, animalid FROM hs_west_colony.colony_master) AS hswest_dams 
+                ON main.dams = hswest_dams.animalid
+            LEFT JOIN (SELECT rfid AS sirerfid, animalid FROM hs_west_colony.colony_master) AS hswest_sires 
+                ON main.sires = hswest_sires.animalid;
         """
+        
     log_action(logger, f'query made with: {pools}')
     org = st.multiselect(label='select organisms', 
                          options=['rat', 'mouse', 'zebrafish'], default = ['rat'],
                          placeholder="Choose organisms to include", disabled=False, label_visibility="visible", key=5)
     
     # query
-    if pools is not None:
+    if pools is not None or rfids is not None:
             
         if 'drop' in sql.lower() or 'commit' in sql.lower() \
                                        or 'insert' in sql.lower() \
@@ -103,12 +168,16 @@ if is_logged_in and admin in username:
                 st.stop()
         
         df = conn.query(sql)
+        df.loc[df.project_name == 'archival_hs_rats_baud', 'tissue_type'] = 'liver'
+        df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
+        df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
+        df.pcr_barcode = df.pcr_barcode.astype(int)
     
     # filter selected animals
         if org is not None:
             log_action(logger, f'animals chosen: {org}')
             df = df.loc[df.organism.isin(org)]
-        st.dataframe(df)
+        st.dataframe(df, hide_index=True)
     
         st.write(len(df), ' samples')
         

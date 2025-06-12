@@ -24,9 +24,6 @@ if is_logged_in:
     log_action(logger, f'{filename}: authentication status: true, user name: {username}')
 
 
-if is_logged_in and admin not in username:
-    st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
-
 # content
 st.title('Genotype Reports')
 
@@ -49,7 +46,8 @@ st.markdown(
         - report.html
     
     They can be found at the following links:
-    - **["round10.4", mRatBN7.2, 2024-07-01](https://library.ucsd.edu/dc/object/bb65996027) [LATEST]**
+    - **["round10.5.2", mRatBN7.2, 2025-04-17](https://library.ucsd.edu/dc/object/bb5610743d) [LATEST]**
+    - ["round10.4", mRatBN7.2, 2024-07-01](https://library.ucsd.edu/dc/object/bb65996027)
     - ["round10.3", mRatBN7.2, 2024-05-29](https://library.ucsd.edu/dc/object/bb08998715)
     - ["round10.2", mRatBN7.2, 2024-01-18](https://library.ucsd.edu/dc/object/bb29129987)
     - ["round10.1", mRatBN7.2, 2023-07-12](https://library.ucsd.edu/dc/object/bd6647448j)

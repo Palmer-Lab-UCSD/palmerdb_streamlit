@@ -45,11 +45,6 @@ name = "MedPC Extractor"
 icon = ""
 
 [[pages]]
-path = "pages/locuszoom.py"
-name = "Regional Association Tools"
-icon = ""
-
-[[pages]]
 path = "pages/report.py"
 name = "GWAS Reports"
 icon = ""
