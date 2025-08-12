@@ -99,13 +99,13 @@ if is_logged_in and admin in username:
             with main as (
                 SELECT
                     a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 'riptide' as seq_method,
-                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
-                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
+                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' when else 'rat' end as organism, 
+                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' end as strain, 
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                    a.fastq_files, tt.tissue_type
+                    a.fastq_files, tt.tissue_typl
                 FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
@@ -151,7 +151,7 @@ if is_logged_in and admin in username:
         
     log_action(logger, f'query made with: {pools}')
     org = st.multiselect(label='select organisms', 
-                         options=['rat', 'mouse', 'zebrafish'], default = ['rat'],
+                         options=['rat', 'mouse', 'zebrafish', 'SD','pcal'], default = ['rat'],
                          placeholder="Choose organisms to include", disabled=False, label_visibility="visible", key=5)
     
     # query
@@ -183,10 +183,13 @@ if is_logged_in and admin in username:
         
     # download
         csv = convert_df(df) 
+        rfid_name = False
+        if rfids is not None:
+            rfid_name = True
         st.download_button(
             label="Download data as CSV",
             data=csv,
-            file_name=f'{pools}_metadata_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
+            file_name=f'{pools}_rfids{rfid_name}_metadata_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
     
