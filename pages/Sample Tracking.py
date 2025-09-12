@@ -1,7 +1,7 @@
 """
 # This page is a dashboard for the sample tracking tables in the database.
 """
-
+## setup
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -59,6 +59,13 @@ def load_pools():
 def load_projects():
     '''load projects into cache'''
     query = "select project_name from sample_tracking.project_metadata order by project_name"
+    df = conn.query(query)
+    return df
+
+@st.cache_data
+def load_library():
+    '''load projects into cache'''
+    query = "select distinct library_name from sample_tracking.sample_barcode_lib order by library_name"
     df = conn.query(query)
     return df
 
@@ -128,6 +135,7 @@ def build_query(table, options=None, value=None, value2=None, value3=None):
     
     return query
 
+## start page content
 if is_logged_in and admin not in username:
     st.write('You do not have permission, sorry! Please contact the Palmer Lab if you think this is a mistake.')
 
@@ -136,11 +144,9 @@ if is_logged_in and admin in username:
     st.title('Palmer Lab Sample Tracking')
     
     # db connection
-    # conn = st.connection("palmerdb", type="sql", autocommit=False)
     conn = init_connection()
     log_action(logger, f'{filename}: db connection made')
 
-    
     # load tables
     sample_metadata = load_table('sample_metadata')
     extraction_log = load_table('extraction_log')
@@ -161,6 +167,11 @@ if is_logged_in and admin in username:
     pool = pool.pool.tolist()
     log_action(logger, f'{filename}: pool list acquired')
 
+    # library list
+    library = load_library()
+    library = library.library_name.tolist()
+    log_action(logger, f'{filename}: library list acquired')
+
     # project selector, rfid filter
     projects = st.multiselect(label='Select project', 
                        options=project, default=None, 
@@ -175,13 +186,9 @@ if is_logged_in and admin in username:
     # sample metadata
     with tab1:
         log_action(logger, f'{filename}: tab selected: sample metadata')
-        st.header("Sample Metadata")
-        query = build_query('sample_metadata', projects_sql, rfids)
-        st.code(query) # remove later
+        st.header("Sample Metadata")            
         
         df = filter_df(sample_metadata, projects, rfids)
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
         
@@ -198,12 +205,14 @@ if is_logged_in and admin in username:
     with tab2:
         log_action(logger, f'{filename}: tab selected: DNA extraction')
         st.header("DNA Extraction Log")
-        query = build_query('extraction_log', projects_sql, rfids_sql)
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
-        
+        riptide = st.multiselect(label='Select plate name', 
+                       options=library, default=None, 
+                       placeholder="Choose a library", 
+                       disabled=False, label_visibility="visible", key=6)
+
         df = filter_df(extraction_log, projects, rfids)
+        if riptide:
+            df = df.loc[df.riptide_plate_number.isin(riptide)]
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
     
@@ -220,19 +229,20 @@ if is_logged_in and admin in username:
         log_action(logger, f'{filename}: tab selected: sample barcode lib')
         st.header("Barcode Library")
     
-        runids = st.text_input('find runid', key=3)
+        runids = st.text_input('Select flowcell', key=3)
         runid_sql =  ', '.join([f"'{v.strip()}'" for v in runids.split(',') if v.strip()])
-        pools = st.multiselect(label='select pool', 
+        pools = st.multiselect(label='Select pool', 
                        options=pool, default=None, 
                        placeholder="Choose a pool", disabled=False, label_visibility="visible", key=4)
         pool_sql = ','.join([f"'{v}'" for v in pools])
-    
-        query = build_query('sample_barcode_lib', projects_sql, rfids_sql, runid_sql, pool_sql)
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
+        riptide = st.multiselect(label='Select plate name', 
+                       options=library, default=None, 
+                       placeholder="Choose a library", 
+                       disabled=False, label_visibility="visible", key=7)
         
         df = filter_df(sample_barcode_lib, projects, rfids, runids, pools)
+        if riptide:
+            df = df.loc[df.library_name.isin(riptide)]
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
         
@@ -248,12 +258,7 @@ if is_logged_in and admin in username:
     with tab4:
         log_action(logger, f'{filename}: tab selected: tissue')
         st.header("Tissue Received")
-    
-        query = build_query('tissue', projects_sql, rfids_sql)
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
-        
+
         df = filter_df(tissue, projects, rfids)
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
@@ -275,24 +280,12 @@ if is_logged_in and admin in username:
         pipe_round = st.multiselect(label='select round', 
                        options=pipeline_ver, default=None, 
                        placeholder="Choose a genotyping round", disabled=False, label_visibility="visible", key=5)
-        round_sql = ','.join([f"'{v}'" for v in pipe_round])
         
         if "'p50_hao_chen'" in projects_sql:
             projects_sql = projects_sql.replace("'p50_hao_chen'", "'p50_hao_chen_2020', 'p50_hao_chen_2014'")
             projects = [item if item != 'p50_hao_chen' else 'p50_hao_chen_2020' for item in projects]
             projects.insert(projects.index('p50_hao_chen_2020') + 1, 'p50_hao_chen_2014')
 
-    
-        query = build_query('genotyping_log_total', projects_sql, rfids_sql)
-        if pipe_round:
-            if "WHERE" in query.upper():
-                query += f' and pipeline_round in ({round_sql})'
-            else:
-                query += f' where pipeline_round in ({round_sql})'
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
-        
         df = filter_df(genotyping_log, projects, rfids)
         if pipe_round:
             df = df.loc[df.pipeline_round.isin(pipe_round)]
@@ -312,14 +305,8 @@ if is_logged_in and admin in username:
     with tab6:
         log_action(logger, f'{filename}: tab selected: genotyping drops')
         st.header("Genotyping Drops")
-    
-        query = build_query('genotyping_drops', projects_sql, rfids_sql)
-        # st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
         
         df = filter_df(genotyping_drops, projects, rfids)
-
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')
         
@@ -335,11 +322,6 @@ if is_logged_in and admin in username:
     with tab7:
         log_action(logger, f'{filename}: tab selected: RNA received')
         st.header("RNA Received")
-    
-        query = build_query('rna', projects_sql, rfids_sql)
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
         
         df = filter_df(rna, projects, rfids)
         st.dataframe(df, hide_index=True)
@@ -357,12 +339,7 @@ if is_logged_in and admin in username:
     with tab8:
         log_action(logger, f'{filename}: tab selected: RNA extraction')
         st.header("RNA Extraction Log")
-    
-        query = build_query('rna_extraction_log', projects_sql, rfids_sql)
-        st.code(query) # remove later
-        # fullquery = 'rollback; begin transaction; ' + query
-        # df = conn.query(fullquery)
-        
+
         df = filter_df(rna_extraction_log, projects, rfids)
         st.dataframe(df, hide_index=True)
         st.write(len(df), ' entries')

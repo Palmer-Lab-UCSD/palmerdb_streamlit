@@ -90,12 +90,13 @@ if is_logged_in and admin in username:
                     JOIN sample_tracking.genotyping_log_total gl ON sm.rfid = gl.rfid
                     WHERE gl.sample_use LIKE 're%'
                     GROUP BY sm.project_name),
-               ship as (select project_name, count(project_name) as shipped from sample_tracking.sample_metadata group by project_name),
+               ship as (select project_name, count(project_name) as shipped 
+                        from sample_tracking.sample_metadata group by project_name),
                rna as 
-                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_sent
-                        FROM sample_tracking.sample_metadata sm
-                        JOIN sample_tracking.rna gl ON sm.rfid = gl.rfid
-                        GROUP BY sm.project_name),
+                    (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_sent
+                    FROM sample_tracking.sample_metadata sm
+                    JOIN sample_tracking.rna gl ON sm.rfid = gl.rfid
+                    GROUP BY sm.project_name),
                rna_extract as 
                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_extracted
                         FROM sample_tracking.sample_metadata sm
