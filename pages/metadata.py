@@ -99,13 +99,13 @@ if is_logged_in and admin in username:
             with main as (
                 SELECT
                     a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 'riptide' as seq_method,
-                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' when else 'rat' end as organism, 
-                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogeneous stock' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' end as strain, 
+                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'rat' end as organism, 
+                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'Heterogeneous stock' end as strain, 
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                    a.fastq_files, tt.tissue_typl
+                    a.fastq_files, tt.tissue_type
                 FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
@@ -141,9 +141,11 @@ if is_logged_in and admin in username:
             """
 
     sql += f"""
-            SELECT main.*, hswest_dams.damrfid, hswest_sires.sirerfid 
+            SELECT main.*, 
+                coalesce(hswest_dams.damrfid, dams) as damrfid, 
+                coalesce(hswest_sires.sirerfid, sires) as sirerfid
             FROM main
-            LEFT JOIN (SELECT rfid AS damrfid, animalid FROM hs_west_colony.colony_master) AS hswest_dams 
+            LEFT JOIN (SELECT rfid as damrfid, animalid FROM hs_west_colony.colony_master) AS hswest_dams 
                 ON main.dams = hswest_dams.animalid
             LEFT JOIN (SELECT rfid AS sirerfid, animalid FROM hs_west_colony.colony_master) AS hswest_sires 
                 ON main.sires = hswest_sires.animalid;
