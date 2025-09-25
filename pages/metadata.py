@@ -105,7 +105,7 @@ if is_logged_in and admin in username:
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                    a.fastq_files, tt.tissue_type
+                    a.fastq_files, tt.tissue_type, a.comments, a.flag
                 FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
@@ -173,7 +173,9 @@ if is_logged_in and admin in username:
         df.loc[(pd.isna(df.tissue_type)) & (df.project_name == 'archival_hs_rats_baud'), 'tissue_type'] = 'liver'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
+        df.loc[df.flag.isin(['spleen','liver','tail','earpunch']) & df.tissue_type != df.flag,'tissue_type'] = df.flag
         df.pcr_barcode = df.pcr_barcode.astype(int)
+        df = df.drop_duplicates()
     
     # filter selected animals
         if org is not None:
