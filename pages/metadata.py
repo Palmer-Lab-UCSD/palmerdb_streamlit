@@ -173,7 +173,7 @@ if is_logged_in and admin in username:
         df.loc[(pd.isna(df.tissue_type)) & (df.project_name == 'archival_hs_rats_baud'), 'tissue_type'] = 'liver'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
-        df.loc[df.flag.isin(['spleen','liver','tail','earpunch']) & df.tissue_type != df.flag,'tissue_type'] = df.flag
+        df.loc[((df.flag.isin(['spleen','liver','tail','earpunch'])) & (df.tissue_type != df.flag)),'tissue_type'] = df.flag
         df.pcr_barcode = df.pcr_barcode.astype(int)
         df = df.drop_duplicates()
     
