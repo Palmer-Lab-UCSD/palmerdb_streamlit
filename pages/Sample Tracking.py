@@ -181,8 +181,8 @@ if is_logged_in and admin in username:
     rfids_sql =  ', '.join([f"'{v.strip()}'" for v in rfids.split(',') if v.strip()])
     
     # tabs
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 
-                                                        'Tissue Received', 'Genotyping Logs', 'Genotyping Drops','RNA Received', 'RNA Extraction Log'])
+    tab1, tab2, tab3, tab4, tab7, tab8 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 
+                                                        'Tissue Received', 'RNA Received', 'RNA Extraction Log'])
     # sample metadata
     with tab1:
         log_action(logger, f'{filename}: tab selected: sample metadata')
@@ -270,54 +270,7 @@ if is_logged_in and admin in username:
             file_name=f'n{len(df)}_tissue_received_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
-
-    # genotyping log (combined)
-    with tab5:
-        log_action(logger, f'{filename}: tab selected: genotyping log')
-        st.header("Genotyping Logs")
-        pipeline_ver = conn.query("select distinct pipeline_round from sample_tracking.genotyping_log_total\
-                                    order by pipeline_round")
-        pipe_round = st.multiselect(label='select round', 
-                       options=pipeline_ver, default=None, 
-                       placeholder="Choose a genotyping round", disabled=False, label_visibility="visible", key=5)
-        
-        if "'p50_hao_chen'" in projects_sql:
-            projects_sql = projects_sql.replace("'p50_hao_chen'", "'p50_hao_chen_2020', 'p50_hao_chen_2014'")
-            projects = [item if item != 'p50_hao_chen' else 'p50_hao_chen_2020' for item in projects]
-            projects.insert(projects.index('p50_hao_chen_2020') + 1, 'p50_hao_chen_2014')
-
-        df = filter_df(genotyping_log, projects, rfids)
-        if pipe_round:
-            df = df.loc[df.pipeline_round.isin(pipe_round)]
-
-        st.dataframe(df, hide_index=True)
-        st.write(len(df), ' entries')
-        
-        csv = convert_df(df)
-        st.download_button(
-            label="Download data as CSV",
-            data=csv,
-            file_name=f'n{len(df)}_genotyping_log_{time.strftime("%Y%m%d")}.csv',
-            mime='text/csv',
-        )
-        
-    # genotyping drops
-    with tab6:
-        log_action(logger, f'{filename}: tab selected: genotyping drops')
-        st.header("Genotyping Drops")
-        
-        df = filter_df(genotyping_drops, projects, rfids)
-        st.dataframe(df, hide_index=True)
-        st.write(len(df), ' entries')
-        
-        csv = convert_df(df)
-        st.download_button(
-            label="Download data as CSV",
-            data=csv,
-            file_name=f'n{len(df)}_genotyping_drops_{time.strftime("%Y%m%d")}.csv',
-            mime='text/csv',
-        )
-
+    
     # RNA received
     with tab7:
         log_action(logger, f'{filename}: tab selected: RNA received')

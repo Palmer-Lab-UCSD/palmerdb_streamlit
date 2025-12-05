@@ -57,6 +57,7 @@ with st.container(border=True):
                             Sample Tracking: Check the progress of animals and projects through the genotyping process.  
                             Data Dictionary: View the data dictionary of a project used for GWAS.  
                             Genotyping Metadata: Retrieve the metadata table for a pool of flowcells.  
+                            Genotyping Logs: View the genotyping log and drops table.
                             Database Records: View Palmer Lab database phenotype and metadata tables per project.  
                             HS West Records: HS West Colony birth, prediction, and genotyping records.  
                          ''')
