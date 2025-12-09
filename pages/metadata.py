@@ -99,7 +99,7 @@ if is_logged_in and admin in username:
             with main as (
                 SELECT
                     a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 
-                    case when a.runid like 'rgd_leah_solberg_woods_rnaseq' then 'LSW_lcwgs' else 'riptide' as seq_method,
+                    case when a.runid like 'rgd_leah_solberg_woods_rnaseq' then 'LSW_lcwgs' else 'riptide' end as seq_method,
                     case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'rat' end as organism, 
                     case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'Heterogeneous stock' end as strain, 
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,

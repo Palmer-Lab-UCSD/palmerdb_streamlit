@@ -159,13 +159,19 @@ if is_logged_in and admin in username:
         st.download_button(
             label="Download CSV",
             data=csv,
-            file_name=f'n{len(dl)}_genotyping_log_{time.strftime("%Y%m%d")}.csv',
+            file_name=f'n{len(dl)}_genotyping_drops_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
 
         # counts of dropped samples in each stage
         st.write('Drop Counts')
-        counts = pd.DataFrame(dl[['lib_round_dropped', 'proj_round_dropped',
+        count_query = f'''select rfid, library_name, barcode, round_calculated, 
+        lib_round_dropped, proj_round_dropped, metadata_qc_status, demux_qc_status,
+        bam_qc_status, sex_qc_status, heterozygosity_qc_status, missingness_qc_status, 
+        mendelian_error_status from genotyping.drops_log_view
+        where round_calculated in ({droundsep})'''
+        dl_count = conn.query(count_query)
+        counts = pd.DataFrame(dl_count[['lib_round_dropped', 'proj_round_dropped',
                                 'metadata_qc_status','demux_qc_status', 'bam_qc_status',
                                 'sex_qc_status','heterozygosity_qc_status',
                                 'missingness_qc_status', 'mendelian_error_status']].count().reset_index().rename(columns={'index': 'drop_stage', 0: 'count'}))

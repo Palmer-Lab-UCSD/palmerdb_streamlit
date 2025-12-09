@@ -4,6 +4,7 @@
 import streamlit as st
 from components.logger import *
 from components.authenticate import *
+import matplotlib.pyplot as plt
 import os
 from streamlit_cognito_auth import CognitoAuthenticator
 from dotenv import load_dotenv
@@ -44,21 +45,37 @@ st.markdown(
     - Genotype Log and Quality Report
         - genotyping_log.csv
         - report.html
-    
-    They can be found at the following links:
-    - **["round10.5.2", mRatBN7.2, 2025-04-17](https://library.ucsd.edu/dc/object/bb5610743d) [LATEST]**
-    - ["round10.4", mRatBN7.2, 2024-07-01](https://library.ucsd.edu/dc/object/bb65996027)
-    - ["round10.3", mRatBN7.2, 2024-05-29](https://library.ucsd.edu/dc/object/bb08998715)
-    - ["round10.2", mRatBN7.2, 2024-01-18](https://library.ucsd.edu/dc/object/bb29129987)
-    - ["round10.1", mRatBN7.2, 2023-07-12](https://library.ucsd.edu/dc/object/bd6647448j)
-    - ["round10", mRatBN7.2, 2023-02-22](https://library.ucsd.edu/dc/object/bb0079998p)
-    - ["round8", rn6, 2019-08-15](https://library.ucsd.edu/dc/object/bb15123938)
-
-    A repository for low-coverage sequenced HS rats (trimmed fastqs) which have been successfully genotyped in the genotyping round "round10.1" is stored on the Sequence Read Archive:
-    - [BioProject Accession Number: PRJNA1022514](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1022514)
     """
 )
 
+conn = st.connection("palmerdb", type="sql", autocommit=False)
+
+df = conn.query('''
+                select palmer_round as "Palmer Name", library_version as "UCSD Library Version", 
+                date as "Release Date", link 
+                from genotyping.ucsd_library
+                order by library_version desc
+                ''')
+    
+df = df.style.apply(
+    lambda row: ['background-color: palegreen'] * len(row) if row.name == 0 else [''] * len(row),
+    axis=1)
+
+st.dataframe(
+    df,
+    column_config={
+        "link": st.column_config.LinkColumn(
+            "Link", display_text="Link to version",
+            width='medium'
+        ),
+    },
+    hide_index=True,
+)
+
+st.markdown('''
+    A repository for low-coverage sequenced HS rats (trimmed fastqs) which have been successfully genotyped is stored on the Sequence Read Archive:
+    - [BioProject Accession Number: PRJNA1022514](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1022514)
+''')
 with st.sidebar:
     st.markdown('''
     [ratgenes.org](https://ratgenes.org)
