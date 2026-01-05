@@ -82,21 +82,20 @@ if is_logged_in and admin in username:
                genotype as 
                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS genotyped
                         FROM  sample_tracking.sample_metadata sm
-                        JOIN sample_tracking.genotyping_log_total gl ON sm.rfid = gl.rfid
+                        JOIN genotyping.genotyping_log_view gl ON sm.rfid = gl.rfid
                         GROUP BY sm.project_name),
-               redo AS 
-                    (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS redo
-                    FROM sample_tracking.sample_metadata sm
-                    JOIN sample_tracking.genotyping_log_total gl ON sm.rfid = gl.rfid
-                    WHERE gl.sample_use LIKE 're%'
-                    GROUP BY sm.project_name),
-               ship as (select project_name, count(project_name) as shipped 
-                        from sample_tracking.sample_metadata group by project_name),
+            --   redo AS 
+            --        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS redo
+            --        FROM sample_tracking.sample_metadata sm
+            --        JOIN genotyping.redo_log gl ON sm.rfid = gl.rfid
+            --        WHERE gl.sample_use LIKE 're%'
+            --        GROUP BY sm.project_name),
+               ship as (select project_name, count(project_name) as shipped from sample_tracking.sample_metadata group by project_name),
                rna as 
-                    (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_sent
-                    FROM sample_tracking.sample_metadata sm
-                    JOIN sample_tracking.rna gl ON sm.rfid = gl.rfid
-                    GROUP BY sm.project_name),
+                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_sent
+                        FROM sample_tracking.sample_metadata sm
+                        JOIN sample_tracking.rna gl ON sm.rfid = gl.rfid
+                        GROUP BY sm.project_name),
                rna_extract as 
                        (SELECT sm.project_name, COUNT(DISTINCT gl.rfid) AS rna_extracted
                         FROM sample_tracking.sample_metadata sm
@@ -110,7 +109,7 @@ if is_logged_in and admin in username:
                     COALESCE(d.dna_extracted, 0) AS dna_extracted, 
                     COALESCE(s.sequenced, 0) AS sequenced, 
                     COALESCE(g.genotyped, 0) AS genotyped,
-                    COALESCE(r.redo, 0) AS redo,
+                --    COALESCE(r.redo, 0) AS redo,
                     COALESCE(rna.rna_sent, 0) AS rna_received,
                     COALESCE(rne.rna_extracted, 0) AS rna_extracted
                 FROM 
@@ -119,7 +118,7 @@ if is_logged_in and admin in username:
                 LEFT JOIN dna d ON pm.project_name = d.project_name
                 LEFT JOIN sequenced s ON pm.project_name = s.project_name
                 LEFT JOIN genotype g ON pm.project_name = g.project_name
-                LEFT JOIN redo r ON pm.project_name = r.project_name
+            --    LEFT JOIN redo r ON pm.project_name = r.project_name
                 left join ship h on pm.project_name = h.project_name
                 left join rna rna on pm.project_name = rna.project_name
                 left join rna_extract rne on pm.project_name = rne.project_name
@@ -157,7 +156,8 @@ if is_logged_in and admin in username:
 
         # display df, shape
         df = df[['project_name', 'shipped', 'phenotyped', 'tissue', 'dna_extracted', 'sequenced', 
-                 'genotyped', 'redo', 'rna_received', 'rna_extracted']]
+                 'genotyped', #'redo', 
+                 'rna_received', 'rna_extracted']]
         st.dataframe(df, hide_index=True)
 
         st.write(len(df), ' projects')
