@@ -98,14 +98,15 @@ if is_logged_in and admin in username:
             begin transaction;
             with main as (
                 SELECT
-                    a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 'riptide' as seq_method,
-                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' else 'rat' end as organism, 
-                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' else 'Heterogenous stock' end as strain, 
+                    a.rfid, a.library_name, a.project_name, a.runid as flowcell_id, a.barcode, a.pcr_barcode, a.pool as seq_pool, 
+                    case when a.runid like 'rgd_leah_solberg_woods_rnaseq' then 'LSW_lcwgs' else 'riptide' end as seq_method,
+                    case when a.rfid LIKE '%CFW%' then 'mouse' when a.project_name like '%su_guo%' then 'zebrafish' when a.project_name like '%friedman%' then 'mouse' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'rat' end as organism, 
+                    case when a.rfid LIKE '%CFW%' then 'Carworth Farms White' when a.project_name like '%friedman%' then 'Carworth Farms White' when a.project_name like '%su_guo%' then 'Ekkwill zebrafish' when a.project_name like '%huda%' then 'SD' when a.rfid like 'p.cal%' then 'pcal' else 'Heterogeneous stock' end as strain, 
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sex' for i, project in enumerate(projects, start=1)])}) as sex,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.coatcolor' for i, project in enumerate(projects, start=1)])}) as coatcolor,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.sires' for i, project in enumerate(projects, start=1)])}) as sires,
                     coalesce({', '.join([f'{string.ascii_lowercase[i]}.dames' for i, project in enumerate(projects, start=1)])}) as dams,
-                    a.fastq_files, tt.tissue_type
+                    a.fastq_files, tt.tissue_type, a.comments, a.flag
                 FROM sample_tracking.sample_barcode_lib AS a
             """
     for i, (project, _) in enumerate(zip(projects, string.ascii_lowercase[1:]), start=1):
@@ -141,9 +142,11 @@ if is_logged_in and admin in username:
             """
 
     sql += f"""
-            SELECT main.*, hswest_dams.damrfid, hswest_sires.sirerfid 
+            SELECT main.*, 
+                coalesce(hswest_dams.damrfid, dams) as damrfid, 
+                coalesce(hswest_sires.sirerfid, sires) as sirerfid
             FROM main
-            LEFT JOIN (SELECT rfid AS damrfid, animalid FROM hs_west_colony.colony_master) AS hswest_dams 
+            LEFT JOIN (SELECT rfid as damrfid, animalid FROM hs_west_colony.colony_master) AS hswest_dams 
                 ON main.dams = hswest_dams.animalid
             LEFT JOIN (SELECT rfid AS sirerfid, animalid FROM hs_west_colony.colony_master) AS hswest_sires 
                 ON main.sires = hswest_sires.animalid;
@@ -151,7 +154,7 @@ if is_logged_in and admin in username:
         
     log_action(logger, f'query made with: {pools}')
     org = st.multiselect(label='select organisms', 
-                         options=['rat', 'mouse', 'zebrafish'], default = ['rat'],
+                         options=['rat', 'mouse', 'zebrafish', 'SD','pcal'], default = ['rat'],
                          placeholder="Choose organisms to include", disabled=False, label_visibility="visible", key=5)
     
     # query
@@ -168,10 +171,12 @@ if is_logged_in and admin in username:
                 st.stop()
         
         df = conn.query(sql)
-        df.loc[df.project_name == 'archival_hs_rats_baud', 'tissue_type'] = 'liver'
+        df.loc[(pd.isna(df.tissue_type)) & (df.project_name == 'archival_hs_rats_baud'), 'tissue_type'] = 'liver'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Rattaca')), 'tissue_type'] = 'earpunch'
         df.loc[(pd.isna(df.tissue_type)) & (df.library_name.str.contains('Riptide')), 'tissue_type'] = 'spleen'
+        df.loc[((df.flag.isin(['spleen','liver','tail','earpunch'])) & (df.tissue_type != df.flag)),'tissue_type'] = df.flag
         df.pcr_barcode = df.pcr_barcode.astype(int)
+        df = df.drop_duplicates()
     
     # filter selected animals
         if org is not None:
@@ -183,10 +188,13 @@ if is_logged_in and admin in username:
         
     # download
         csv = convert_df(df) 
+        rfid_name = False
+        if rfids is not None:
+            rfid_name = True
         st.download_button(
             label="Download data as CSV",
             data=csv,
-            file_name=f'{pools}_metadata_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
+            file_name=f'{pools}_rfids{rfid_name}_metadata_n{len(df)}_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
     

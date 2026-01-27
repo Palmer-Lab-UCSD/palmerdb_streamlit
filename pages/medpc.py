@@ -42,14 +42,16 @@ st.markdown('''Instructions:
 ''')
 
 def exp_name_alc(s):
-    pattern = re.compile(r'(DAY|DEP)(\w{2})|(\w{1}Q)|(_PR)')
+    pattern = re.compile(r'NONDEP(1Q|3Q|PR)|(DAY|DEP)(\w{2})|(\w{1}Q)|(_PR)')
     match = pattern.search(s)
     if match:
-        if match.group(1):
-            return match.group(1) + match.group(2)
-        elif match.group(3):
-            return match.group(3)
-        elif match.group(4):
+        if match.group(1):  # NONDEP(1Q|3Q|PR)
+            return match.group(1)
+        elif match.group(2):  # DAY or DEP
+            return match.group(2) + match.group(3)
+        elif match.group(4):  # (\w{1}Q)
+            return match.group(4)
+        elif match.group(5):  # (_PR)
             return 'PR'
     return None
 

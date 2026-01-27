@@ -30,6 +30,11 @@ name = "Genotyping Metadata"
 icon = ""
 
 [[pages]]
+path = "pages/genotypinglog.py"
+name = "Genotyping Logs"
+icon = ""
+
+[[pages]]
 path = "pages/rattaca.py"
 name = "HS West Records"
 icon = "" 
@@ -73,4 +78,3 @@ icon = ""
 path = "pages/genotype.py"
 name = "Genotyping Reports"
 icon = ""
-

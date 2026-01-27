@@ -59,9 +59,8 @@ if is_logged_in:
         perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
     elif is_logged_in and admin in username:
         # case: logged in, admin
-        perm = conn.query(f"""select distinct project_name as projects 
-                              from sample_tracking.project_metadata 
-                              order by project_name""")
+        perm = conn.query(f"""select distinct project from sample_tracking.gwas_reports
+                              order by project""")
     else:
         # case: not logged in
         perm = None
