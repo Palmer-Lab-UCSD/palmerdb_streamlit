@@ -35,8 +35,6 @@ ENV PATH=/app/venv/bin:${PATH}
 # Copy all files from the current directory to the working directory
 COPY . . 
 
-# organize
-COPY auth.env secrets.toml ./.streamlit/
  
 # Expose the port number that Streamlit listens on
 EXPOSE 8501
