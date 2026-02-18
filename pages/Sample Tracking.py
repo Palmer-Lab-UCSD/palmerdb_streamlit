@@ -156,6 +156,7 @@ if is_logged_in and admin in username:
     rna_extraction_log = load_table('rna_extraction_log')
     genotyping_log = load_table('genotyping_log_total')
     genotyping_drops = load_table('genotyping_drops')
+    error_log = load_table('error_glossary')
     
     # project list
     project = load_projects()
@@ -181,8 +182,9 @@ if is_logged_in and admin in username:
     rfids_sql =  ', '.join([f"'{v.strip()}'" for v in rfids.split(',') if v.strip()])
     
     # tabs
-    tab1, tab2, tab3, tab4, tab7, tab8 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 
-                                                        'Tissue Received', 'RNA Received', 'RNA Extraction Log'])
+    tab1, tab2, tab3, tab4, tab7, tab8, tab9 = st.tabs(["Sample Metadata", "DNA Extraction Log", "Sample Barcodes", 
+                                                        'Tissue Received', 'RNA Received', 'RNA Extraction Log',
+                                                        "Known Errors"])
     # sample metadata
     with tab1:
         log_action(logger, f'{filename}: tab selected: sample metadata')
@@ -304,6 +306,15 @@ if is_logged_in and admin in username:
             file_name=f'n{len(df)}_rna_extraction_log_{time.strftime("%Y%m%d")}.csv',
             mime='text/csv',
         )
+
+    # Known Errors
+    with tab9:
+        log_action(logger, f'{filename}: tab selected: known errors')
+        st.header("Known Error Glossary")
+        st.write('To search this table, hover over the top right corner of the table and click the magnifying glass.')
+
+        st.dataframe(error_log,hide_index=True,width=900)
+        st.write(len(error_log), ' entries')
         
     # force refresh
     if st.button('Refresh', on_click = st.cache_data.clear()):
