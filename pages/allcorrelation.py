@@ -68,7 +68,7 @@ if is_logged_in:
     if is_logged_in and admin not in username:
         # case: logged in, external account
         prefix = username.split('_')[0]
-        perm = conn.query(f"""select * from sample_tracking.irs_permissions where username like '{prefix}'""")
+        perm = conn.query(f"""select * from internet_rat_server.irs_permissions where username like '{prefix}'""")
     else:
         # case: not logged in
         perm = None
