@@ -119,3 +119,20 @@ if is_logged_in and admin in username:
 if st.button('Refresh', on_click = st.cache_data.clear()):
     log_action(logger, f'{filename}: refresh button clicked')
     st.cache_data.clear()
+
+with st.sidebar:
+    st.markdown('''
+    [ratgenes.org](https://ratgenes.org)
+    
+    [Palmer Lab website](https://palmerlab.org)
+    
+    [ratgtex.org](https://ratgtex.org)
+    
+    Palmer Lab IRS
+    ''')
+    with st.container(border=True):
+        st.write('##### :green[Support]')
+        st.markdown("For website support, please contact the Palmer Lab.")
+    
+    st.image('./assets/Manhattan-Black-Roboto-font-4-alt-5.png')
+    st.image('https://palmerlab.org/wp-content/uploads/2019/09/palmerlab-logo.png')
